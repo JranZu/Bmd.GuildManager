@@ -4,7 +4,7 @@
 
 Genre: Guild management / asynchronous RPG
 Platform: Web browser
-Technology Stack: C# / .NET / Azure serverless architecture
+Technology Stack: C# / .NET 10 / Azure serverless architecture
 
 ---
 

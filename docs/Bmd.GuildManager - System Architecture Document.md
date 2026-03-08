@@ -3,7 +3,7 @@
 ## Project: Guild Manager
 
 Platform: Web
-Technology: .NET / C# / Azure Serverless
+Technology: .NET 10 / C# / Azure Serverless
 Architecture Style: Event Driven Serverless Microservices
 
 ---
@@ -650,7 +650,7 @@ Example pipeline:
 
 ```
 GitHub push
-→ build .NET solution
+→ build .NET 10 solution
 → run tests
 → deploy Azure Functions
 → deploy Static Web App
