@@ -9,10 +9,18 @@ Guild Manager is a web-based management game where the player runs an adventurer
 | Layer    | Technology                                    |
 |----------|-----------------------------------------------|
 | Frontend | Blazor WebAssembly — Azure Static Web Apps    |
-| Backend  | .NET 8 Azure Functions (Isolated Worker)      |
+| Backend  | .NET 10 Azure Functions (Isolated Worker)     |
 | Database | Azure Cosmos DB (NoSQL)                       |
 | Messaging| Azure Service Bus                             |
 | CI/CD    | GitHub Actions                                |
+
+### C# Compiler Settings
+
+All C# projects in this repository use:
+
+- **Target framework:** `net10.0`
+- **Nullable reference types:** enabled
+- **Treat warnings as errors:** enabled
 
 ---
 
@@ -23,7 +31,7 @@ Bmd.GuildManager/
 ├── .github/
 │   └── workflows/
 │       └── ci-cd.yml          # CI/CD pipeline (GitHub Actions)
-├── backend/                   # Azure Functions (.NET 8)
+├── backend/                   # Azure Functions (.NET 10)
 │   └── README.md
 ├── docs/                      # Architecture & design documentation
 │   ├── game-design-document.md
@@ -53,7 +61,7 @@ Bmd.GuildManager/
 
 ### Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - [Azure Functions Core Tools v4](https://learn.microsoft.com/azure/azure-functions/functions-run-local)
 - [Node.js 20+](https://nodejs.org/) (for any frontend tooling)
 - An Azure subscription (for cloud deployment)
