@@ -1,0 +1,70 @@
+## Build output
+bin/
+obj/
+out/
+publish/
+
+## .NET project files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+.vs/
+.vscode/
+*.ncrunchproject
+*.ncrunchsolution
+
+## NuGet packages
+*.nupkg
+*.snupkg
+**/[Pp]ackages/
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+## Azure Functions local settings (contains secrets — never commit)
+local.settings.json
+
+## ASP.NET / Blazor
+**/wwwroot/dist/
+**/wwwroot/_content/
+
+## Node / frontend tooling
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+.yarn/install-state.gz
+dist/
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.svelte-kit/
+
+## Test results
+TestResults/
+coverage/
+*.trx
+*.coveragexml
+
+## Rider / JetBrains
+.idea/
+*.sln.iml
+
+## macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+## Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+## Linux
+*~
