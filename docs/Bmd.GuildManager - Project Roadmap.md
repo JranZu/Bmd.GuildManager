@@ -38,7 +38,7 @@ This document serves two purposes:
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | Repository & Solution Scaffold | ⬜ |
+| 1 | Repository & Solution Scaffold | ✅ |
 | 2 | Azure Infrastructure Baseline | ⬜ |
 | 3 | CI/CD Pipeline Activation | ⬜ |
 | 4 | Event Envelope & Shared Contracts | ⬜ |
@@ -77,7 +77,7 @@ This document serves two purposes:
 
 ### Phase 1 — Repository & Solution Scaffold
 
-**Status:** ⬜
+**Status:** ✅
 
 **Goal:** Establish the foundational repository structure and .NET solution layout so all subsequent phases have a consistent place to build.
 
@@ -97,10 +97,10 @@ This document serves two purposes:
 
 **Acceptance Criteria:**
 
-- [ ] `dotnet build ./backend` succeeds with zero warnings and zero errors
-- [ ] `dotnet build ./frontend` succeeds with zero warnings and zero errors
-- [ ] `dotnet test ./backend` runs and reports zero failures (empty test suite is acceptable at this stage)
-- [ ] All projects declare `net10.0`, `<Nullable>enable</Nullable>`, and `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`
+- [x] `dotnet build ./backend` succeeds with zero warnings and zero errors
+- [x] `dotnet build ./frontend` succeeds with zero warnings and zero errors
+- [x] `dotnet test ./backend` runs and reports zero failures (empty test suite is acceptable at this stage)
+- [x] All projects declare `net10.0`, `<Nullable>enable</Nullable>`, and `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`
 
 ---
 

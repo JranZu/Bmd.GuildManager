@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/docs/">
+    <File Path="../docs/Bmd.GuildManager - Event Contract Specification.md" />
+    <File Path="../docs/Bmd.GuildManager - Game Design Document.md" />
+    <File Path="../docs/Bmd.GuildManager - Project Roadmap.md" />
+    <File Path="../docs/Bmd.GuildManager - System Architecture Diagrams.md" />
+    <File Path="../docs/Bmd.GuildManager - System Architecture Document.md" />
+  </Folder>
+  <Folder Name="/frontend/">
+    <Project Path="Bmd.GuildManager.Web/Bmd.GuildManager.Web.csproj" />
+  </Folder>
+</Solution>

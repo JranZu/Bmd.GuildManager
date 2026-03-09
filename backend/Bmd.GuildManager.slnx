@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/backend/">
+    <Project Path="Bmd.GuildManager.Core/Bmd.GuildManager.Core.csproj" />
+    <Project Path="Bmd.GuildManager.Functions/Bmd.GuildManager.Functions.csproj" />
+    <Project Path="Bmd.GuildManager.Tests/Bmd.GuildManager.Tests.csproj" />
+  </Folder>
+  <Folder Name="/docs/">
+    <File Path="../docs/Bmd.GuildManager - Event Contract Specification.md" />
+    <File Path="../docs/Bmd.GuildManager - Game Design Document.md" />
+    <File Path="../docs/Bmd.GuildManager - Project Roadmap.md" />
+    <File Path="../docs/Bmd.GuildManager - System Architecture Diagrams.md" />
+    <File Path="../docs/Bmd.GuildManager - System Architecture Document.md" />
+  </Folder>
+</Solution>
