@@ -114,6 +114,17 @@ This document serves two purposes:
 
 **Work Items:**
 
+- Provision the following Azure resources (manually or via Bicep/Terraform):
+  - Azure Functions App (Isolated Worker, .NET 10)
+  - Azure Cosmos DB account with the containers listed in SAD §4
+  - Azure Service Bus namespace with topics/queues listed in SAD §3
+  - Azure Static Web Apps instance
+  - Azure SignalR Service
+  - Azure Blob Storage account
+  - Azure Application Insights instance
+  - Azure Key Vault
+  - Azure App Configuration
+
 **Provisioned Resources (`dev`):**
 
 | Resource | Name |

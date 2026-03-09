@@ -115,6 +115,12 @@ Functions are triggered by:
 * Service Bus messages
 * scheduled messages
 
+Hosting: **Flex Consumption plan (Linux)**
+
+- Selected for faster cold starts, improved scaling,
+  and alignment with Microsoft’s recommended serverless
+  hosting direction for Azure Functions.
+
 ---
 
 ## Azure Service Bus

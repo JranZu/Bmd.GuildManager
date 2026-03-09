@@ -20,7 +20,7 @@ All backend projects target **.NET 10** and use the following compiler settings:
 ### Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- [Azure Functions Core Tools v4](https://learn.microsoft.com/azure/azure-functions/functions-run-local)
+- [Azure Functions Core Tools v4 (Flex Consumption / Linux)](https://learn.microsoft.com/azure/azure-functions/functions-run-local)
 - An Azure subscription (for cloud deployment)
 
 ## Structure (Planned)
