@@ -106,7 +106,7 @@ This document serves two purposes:
 
 ### Phase 2 — Azure Infrastructure Baseline
 
-**Status:** ⬜
+**Status:** ✅
 
 **Goal:** Provision all Azure resources required by the architecture so that subsequent phases can target real infrastructure.
 
@@ -114,25 +114,30 @@ This document serves two purposes:
 
 **Work Items:**
 
-- Provision the following Azure resources (manually or via Bicep/Terraform):
-  - Azure Functions App (Isolated Worker, .NET 10)
-  - Azure Cosmos DB account with the containers listed in SAD §4
-  - Azure Service Bus namespace with topics/queues listed in SAD §3
-  - Azure Static Web Apps instance
-  - Azure SignalR Service
-  - Azure Blob Storage account
-  - Azure Application Insights instance
-  - Azure Key Vault
-  - Azure App Configuration
+**Provisioned Resources (`dev`):**
+
+| Resource | Name |
+|----------|------|
+| Resource Group | `rg-guildmanager-dev` |
+| Cosmos DB | `cosmos-guildmanager-dev` |
+| Service Bus | `sb-guildmanager-dev` |
+| Storage Account | `stguildmanagerdev` |
+| Function App | `func-guildmanager-dev` |
+| Static Web Apps | `stapp-guildmanager-dev` |
+| SignalR | `sigr-guildmanager-dev` |
+| Key Vault | `kv-guildmanager-dev` |
+| App Configuration | `appcs-guildmanager-dev` |
+| API Management | `apim-guildmanager-dev` |
+| Application Insights | `appi-guildmanager-dev` |
 
 **Acceptance Criteria:**
 
-- [ ] All resources exist and are accessible in the Azure portal
-- [ ] Cosmos DB containers are created: `Players`, `Characters`, `Items`, `Inventory`, `MarketListings`, `WorldPopulation`, `Events`
-- [ ] Service Bus topics/queues are created: `player-events`, `quest-events`, `loot-events`, `market-events`, `economy-events`, `population-events`, `notification-events`, `analytics-events`
-- [ ] Azure API Management instance is provisioned (optional per SAD §3; provision now so Phase 29 has a target)
-- [ ] Azure Functions can connect to Cosmos DB and Service Bus using managed identity or connection strings stored in Key Vault
-- [ ] Application Insights instrumentation key is retrievable
+- [x] All resources exist and are accessible in the Azure portal
+- [x] Cosmos DB containers are created: `Players`, `Characters`, `Items`, `Inventory`, `MarketListings`, `WorldPopulation`, `Events`
+- [x] Service Bus topics/queues are created: `player-events`, `quest-events`, `loot-events`, `market-events`, `economy-events`, `population-events`, `notification-events`, `analytics-events`
+- [x] Azure API Management instance is provisioned (optional per SAD §3; provision now so Phase 29 has a target)
+- [x] Azure Functions can connect to Cosmos DB and Service Bus using managed identity or connection strings stored in Key Vault
+- [x] Application Insights instrumentation key is retrievable
 
 ---
 
