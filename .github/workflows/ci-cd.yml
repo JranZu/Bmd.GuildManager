@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+﻿name: CI/CD Pipeline
 
 on:
   push:
@@ -21,16 +21,17 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore ./backend
+      # TODO: Uncomment the following steps once the backend projects are scaffolded.
+      # - name: Restore dependencies
+      #   run: dotnet restore ./backend
 
-      - name: Build
-        run: dotnet build ./backend --no-restore --configuration Release
+      # - name: Build
+      #   run: dotnet build ./backend --no-restore --configuration Release
 
-      - name: Run tests
-        run: dotnet test ./backend --no-build --configuration Release --verbosity normal
+      # - name: Run tests
+      #   run: dotnet test ./backend --no-build --configuration Release --verbosity normal
 
   build-frontend:
     name: Build Frontend
@@ -44,13 +45,14 @@ jobs:
       - name: Setup .NET (Blazor WebAssembly)
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore ./frontend
+      # TODO: Uncomment the following steps once the frontend project is scaffolded.
+      # - name: Restore dependencies
+      #   run: dotnet restore ./frontend
 
-      - name: Build
-        run: dotnet build ./frontend --no-restore --configuration Release
+      # - name: Build
+      #   run: dotnet build ./frontend --no-restore --configuration Release
 
   # ------------------------------------------------------------
   # Deployment jobs — only run on push to main
@@ -72,13 +74,13 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
-      - name: Publish backend
-        run: dotnet publish ./backend --configuration Release --output ./publish/backend
-
-      # TODO: Add Azure Functions deployment action once publish profile secret
-      #       (AZURE_FUNCTIONAPP_PUBLISH_PROFILE) is configured in repository settings.
+      # TODO: Uncomment once the backend projects are scaffolded and the publish
+      #       profile secret (AZURE_FUNCTIONAPP_PUBLISH_PROFILE) is configured
+      #       in repository settings.
+      # - name: Publish backend
+      #   run: dotnet publish ./backend --configuration Release --output ./publish/backend
       # - name: Deploy to Azure Functions
       #   uses: Azure/functions-action@v1
       #   with:
