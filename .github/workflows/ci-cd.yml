@@ -23,15 +23,14 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      # TODO: Uncomment the following steps once the backend projects are scaffolded.
-      # - name: Restore dependencies
-      #   run: dotnet restore ./backend
+      - name: Restore dependencies
+        run: dotnet restore ./backend
 
-      # - name: Build
-      #   run: dotnet build ./backend --no-restore --configuration Release
+      - name: Build
+        run: dotnet build ./backend --no-restore --configuration Release
 
-      # - name: Run tests
-      #   run: dotnet test ./backend --no-build --configuration Release --verbosity normal
+      - name: Run tests
+        run: dotnet test ./backend --no-build --configuration Release --verbosity normal
 
   build-frontend:
     name: Build Frontend
@@ -47,18 +46,11 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      # TODO: Uncomment the following steps once the frontend project is scaffolded.
-      # - name: Restore dependencies
-      #   run: dotnet restore ./frontend
+      - name: Restore dependencies
+        run: dotnet restore ./frontend
 
-      # - name: Build
-      #   run: dotnet build ./frontend --no-restore --configuration Release
-
-  # ------------------------------------------------------------
-  # Deployment jobs — only run on push to main
-  # Secrets and publish profiles must be configured in GitHub
-  # repository settings before enabling these steps.
-  # ------------------------------------------------------------
+      - name: Build
+        run: dotnet build ./frontend --no-restore --configuration Release
 
   deploy-backend:
     name: Deploy Backend to Azure Functions
@@ -76,17 +68,15 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      # TODO: Uncomment once the backend projects are scaffolded and the publish
-      #       profile secret (AZURE_FUNCTIONAPP_PUBLISH_PROFILE) is configured
-      #       in repository settings.
-      # - name: Publish backend
-      #   run: dotnet publish ./backend --configuration Release --output ./publish/backend
-      # - name: Deploy to Azure Functions
-      #   uses: Azure/functions-action@v1
-      #   with:
-      #     app-name: ${{ vars.AZURE_FUNCTIONAPP_NAME }}
-      #     package: ./publish/backend
-      #     publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+      - name: Publish backend
+        run: dotnet publish ./backend --configuration Release --output ./publish/backend
+
+      - name: Deploy to Azure Functions
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ vars.AZURE_FUNCTIONAPP_NAME }}
+          package: ./publish/backend
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
 
   deploy-frontend:
     name: Deploy Frontend to Azure Static Web Apps
@@ -99,13 +89,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # TODO: Add Azure Static Web Apps deployment action once deployment token
-      #       (AZURE_STATIC_WEB_APPS_API_TOKEN) is configured in repository settings.
-      # - name: Deploy to Azure Static Web Apps
-      #   uses: Azure/static-web-apps-deploy@v1
-      #   with:
-      #     azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-      #     repo_token: ${{ secrets.GITHUB_TOKEN }}
-      #     action: upload
-      #     app_location: /frontend
-      #     output_location: wwwroot
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: /frontend
+          output_location: wwwroot
