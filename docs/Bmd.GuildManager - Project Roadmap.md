@@ -182,7 +182,7 @@ This document serves two purposes:
 
 ### Phase 4 — Event Envelope & Shared Contracts
 
-**Status:** ⬜
+**Status:** ✅
 
 **Goal:** Implement the shared event envelope and all event payload types in `Bmd.GuildManager.Core` so every subsequent phase can publish and consume typed events.
 
@@ -196,11 +196,11 @@ This document serves two purposes:
 
 **Acceptance Criteria:**
 
-- [ ] A base `EventEnvelope<T>` type exists with all fields from ECS §1
-- [ ] A C# type exists for every event defined in the ECS (sections 2–9)
-- [ ] All types serialize to valid JSON matching the ECS schemas
-- [ ] All types deserialize correctly from their JSON representations
-- [ ] `dotnet test` passes with full coverage of serialization round-trips
+- [x] A base `EventEnvelope<T>` type exists with all fields from ECS §1
+- [x] A C# type exists for every event defined in the ECS (sections 2–9)
+- [x] All types serialize to valid JSON matching the ECS schemas
+- [x] All types deserialize correctly from their JSON representations
+- [x] `dotnet test` passes with full coverage of serialization round-trips
 
 ---
 

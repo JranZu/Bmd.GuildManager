@@ -22,6 +22,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Bmd.GuildManager.Core\Bmd.GuildManager.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Using Include="Xunit" />
 	</ItemGroup>
 
