@@ -280,6 +280,8 @@ Outcome values: Success, PartialSuccess, Failure, CatastrophicFailure.
 }
 ```
 
+> `goldAwarded` represents a bonus gold award granted directly by the quest outcome. It is distinct from gold earned through market sales, which flows through the economy system via `ItemSold` → `GoldCredited`.
+
 Consumers:
 
 * loot generator
@@ -721,5 +723,8 @@ PopulationUpdated
 ```
 
 This communicates that the event describes something that already happened.
+
+> **Payload Type Naming**
+> Payload types in `Bmd.GuildManager.Core` must be named exactly as their `eventType` string. The `EventEnvelope<T>` factory derives `eventType` from `typeof(T).Name` — a mismatch between the type name and the ECS string will produce an incorrect value on the wire.
 
 ---

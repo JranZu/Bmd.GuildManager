@@ -888,4 +888,4 @@ This document serves two purposes:
 
 ---
 
-*Last updated: Phase 1 not yet started. All phases are ⬜ Not started.*
+*Last updated: Phases 1–4 complete. Phase 5 not yet started.*
