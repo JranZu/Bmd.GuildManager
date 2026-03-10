@@ -43,7 +43,7 @@ This document serves two purposes:
 | 3 | CI/CD Pipeline Activation | ✅ |
 | 4 | Event Envelope & Shared Contracts | ✅ |
 | 5 | Player & Guild Creation | ✅ |
-| 6 | Player Onboarding Flow | ⬜ |
+| 6 | Player Onboarding Flow | ✅ |
 | 7 | Character Domain | ⬜ |
 | 8 | Quest Start | ⬜ |
 | 9 | Quest Completion & Resolution | ⬜ |
@@ -232,7 +232,7 @@ This document serves two purposes:
 
 ### Phase 6 — Player Onboarding Flow
 
-**Status:** ⬜
+**Status:** ✅
 
 **Goal:** Implement `OnboardPlayerFunction` which reacts to `PlayerCreated` and fully provisions the player's guild, starter characters, and starter items.
 
@@ -248,12 +248,12 @@ This document serves two purposes:
 
 **Acceptance Criteria:**
 
-- [ ] A `PlayerCreated` event on `player-events` triggers onboarding
-- [ ] A guild record exists in Cosmos DB with `startingGold: 500`
-- [ ] `GuildCreated` event is published with correct `playerId` and `guildName`
-- [ ] `StarterCharactersGranted` and `StarterItemsGranted` events are published when starter grants are configured
-- [ ] Replaying the same `PlayerCreated` event does not create duplicate guild records (idempotency via `eventId` check)
-- [ ] Unit and integration tests pass
+- [x] A `PlayerCreated` event on `player-events` triggers onboarding
+- [x] A guild record exists in Cosmos DB with `startingGold: 500`
+- [x] `GuildCreated` event is published with correct `playerId` and `guildName`
+- [x] `StarterCharactersGranted` and `StarterItemsGranted` events are published when starter grants are configured
+- [x] Replaying the same `PlayerCreated` event does not create duplicate guild records (idempotency via `eventId` check)
+- [x] Unit and integration tests pass
 
 ---
 

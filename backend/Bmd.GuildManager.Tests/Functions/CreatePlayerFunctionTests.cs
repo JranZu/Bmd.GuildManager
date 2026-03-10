@@ -102,38 +102,4 @@ public class CreatePlayerFunctionTests
     }
 }
 
-file class FakePlayerRepository : IPlayerRepository
-{
-    public List<Player> Players { get; } = [];
 
-    public Task<Player?> FindByIdempotencyKeyAsync(string idempotencyKey)
-    {
-        var match = Players.FirstOrDefault(player => player.IdempotencyKey == idempotencyKey);
-        return Task.FromResult(match);
-    }
-
-    public Task CreateAsync(Player player)
-    {
-        Players.Add(player);
-        return Task.CompletedTask;
-    }
-}
-
-file class FakeEventPublisher : IEventPublisher
-{
-    public List<EventEnvelope<object>> Published { get; } = [];
-
-    public Task PublishAsync<T>(EventEnvelope<T> envelope)
-    {
-        Published.Add(new EventEnvelope<object>(
-            envelope.EventId,
-            envelope.EventType,
-            envelope.Timestamp,
-            envelope.CorrelationId,
-            envelope.Source,
-            envelope.Version,
-            envelope.Data!));
-
-        return Task.CompletedTask;
-    }
-}

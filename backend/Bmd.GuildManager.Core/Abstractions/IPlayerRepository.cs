@@ -4,7 +4,11 @@ namespace Bmd.GuildManager.Core.Abstractions;
 
 public interface IPlayerRepository
 {
-    Task<Player?> FindByIdempotencyKeyAsync(string idempotencyKey);
+	Task CreateAsync(Player player);
 
-    Task CreateAsync(Player player);
+	Task UpdateAsync(Player player);
+
+	Task<Player?> FindByIdempotencyKeyAsync(string idempotencyKey);
+
+	Task<Player?> FindByPlayerIdAsync(Guid playerId);
 }

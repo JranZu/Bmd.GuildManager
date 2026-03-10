@@ -11,28 +11,51 @@ public class CosmosPlayerRepository(CosmosClient cosmosClient) : IPlayerReposito
 
     private Container Container => cosmosClient.GetContainer(DatabaseName, ContainerName);
 
-    public async Task<Player?> FindByIdempotencyKeyAsync(string idempotencyKey)
-    {
-        var query = new QueryDefinition("SELECT * FROM c WHERE c.idempotencyKey = @key")
-            .WithParameter("@key", idempotencyKey);
+	public async Task CreateAsync(Player player)
+	{
+		await Container.CreateItemAsync(player, new PartitionKey(player.PlayerId.ToString()));
+	}
 
-        var iterator = Container.GetItemQueryIterator<Player>(query);
+	public async Task UpdateAsync(Player player)
+	{
+		await Container.ReplaceItemAsync(
+			player,
+			player.Id,
+			new PartitionKey(player.PlayerId.ToString()));
+	}
 
-        while (iterator.HasMoreResults)
-        {
-            var page = await iterator.ReadNextAsync();
-            var existing = page.FirstOrDefault();
-            if (existing is not null)
-            {
-                return existing;
-            }
-        }
+	public async Task<Player?> FindByPlayerIdAsync(Guid playerId)
+	{
+		try
+		{
+			var response = await Container.ReadItemAsync<Player>(
+				playerId.ToString(),
+				new PartitionKey(playerId.ToString()));
+			return response.Resource;
+		}
+		catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+		{
+			return null;
+		}
+	}
 
-        return null;
-    }
+	public async Task<Player?> FindByIdempotencyKeyAsync(string idempotencyKey)
+	{
+		var query = new QueryDefinition("SELECT * FROM c WHERE c.idempotencyKey = @key")
+			.WithParameter("@key", idempotencyKey);
 
-    public async Task CreateAsync(Player player)
-    {
-        await Container.CreateItemAsync(player, new PartitionKey(player.PlayerId.ToString()));
-    }
+		var iterator = Container.GetItemQueryIterator<Player>(query);
+
+		while (iterator.HasMoreResults)
+		{
+			var page = await iterator.ReadNextAsync();
+			var existing = page.FirstOrDefault();
+			if (existing is not null)
+			{
+				return existing;
+			}
+		}
+
+		return null;
+	}
 }

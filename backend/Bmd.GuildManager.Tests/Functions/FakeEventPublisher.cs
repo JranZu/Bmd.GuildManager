@@ -1,0 +1,23 @@
+﻿using Bmd.GuildManager.Core.Abstractions;
+using Bmd.GuildManager.Core.Events;
+
+namespace Bmd.GuildManager.Tests.Functions;
+
+public class FakeEventPublisher : IEventPublisher
+{
+	public List<EventEnvelope<object>> Published { get; } = [];
+
+	public Task PublishAsync<T>(EventEnvelope<T> envelope)
+	{
+		Published.Add(new EventEnvelope<object>(
+			envelope.EventId,
+			envelope.EventType,
+			envelope.Timestamp,
+			envelope.CorrelationId,
+			envelope.Source,
+			envelope.Version,
+			envelope.Data!));
+
+		return Task.CompletedTask;
+	}
+}
