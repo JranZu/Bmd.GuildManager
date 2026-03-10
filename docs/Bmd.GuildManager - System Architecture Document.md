@@ -349,8 +349,8 @@ New player registers
 → OnboardPlayerFunction runs
 → guild created with starting gold
 → GuildCreated event published
-→ starter characters granted (optional)
-→ starter items granted (optional)
+→ starter characters granted
+→ starter items granted
 ```
 
 ---

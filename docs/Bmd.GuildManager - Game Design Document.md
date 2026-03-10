@@ -408,7 +408,7 @@ Application Insights
 Azure Monitor
 Azure Key Vault
 Azure App Configuration
-API Management (optional)
+API Management
 
 ---
 

@@ -243,8 +243,8 @@ This document serves two purposes:
 - Implement `OnboardPlayerFunction` as a Service Bus-triggered function on `player-events`
 - Create the player's guild with 500 starting gold and persist to Cosmos DB
 - Publish `GuildCreated` event
-- Grant starter characters (optional) and publish `StarterCharactersGranted`
-- Grant starter items (optional) and publish `StarterItemsGranted`
+- Grant starter characters and publish `StarterCharactersGranted`
+- Grant starter items and publish `StarterItemsGranted`
 
 **Acceptance Criteria:**
 
