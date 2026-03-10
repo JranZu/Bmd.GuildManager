@@ -68,3 +68,6 @@ $RECYCLE.BIN/
 
 ## Linux
 *~
+
+## HTTP client environment files (may contain API keys)
+**/HttpTests/http-client.env.json

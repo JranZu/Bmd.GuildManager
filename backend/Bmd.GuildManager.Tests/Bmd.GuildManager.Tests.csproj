@@ -23,6 +23,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Bmd.GuildManager.Core\Bmd.GuildManager.Core.csproj" />
+		<ProjectReference Include="..\Bmd.GuildManager.Functions\Bmd.GuildManager.Functions.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

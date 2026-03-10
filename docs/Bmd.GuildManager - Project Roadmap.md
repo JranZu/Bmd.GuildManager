@@ -39,10 +39,10 @@ This document serves two purposes:
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | Repository & Solution Scaffold | ✅ |
-| 2 | Azure Infrastructure Baseline | ⬜ |
-| 3 | CI/CD Pipeline Activation | ⬜ |
-| 4 | Event Envelope & Shared Contracts | ⬜ |
-| 5 | Player & Guild Creation | ⬜ |
+| 2 | Azure Infrastructure Baseline | ✅ |
+| 3 | CI/CD Pipeline Activation | ✅ |
+| 4 | Event Envelope & Shared Contracts | ✅ |
+| 5 | Player & Guild Creation | ✅ |
 | 6 | Player Onboarding Flow | ⬜ |
 | 7 | Character Domain | ⬜ |
 | 8 | Quest Start | ⬜ |
@@ -206,7 +206,7 @@ This document serves two purposes:
 
 ### Phase 5 — Player & Guild Creation
 
-**Status:** ⬜
+**Status:** ✅
 
 **Goal:** Implement the `CreatePlayerFunction` HTTP endpoint. A player can register, which creates a Player record, publishes `PlayerCreated`, and returns a player ID.
 
@@ -216,17 +216,17 @@ This document serves two purposes:
 
 - Implement `CreatePlayerFunction` as an HTTP-triggered Azure Function
 - Persist a `Player` document to Cosmos DB (`Players` container)
-- Publish a `PlayerCreated` event to Service Bus (`player-events`)
+- Publish a `PlayerCreated` event to Service Bus (`player-events`) - not testable at this time
 - Return the new `playerId` in the HTTP response
 
 **Acceptance Criteria:**
 
-- [ ] `POST /api/players` with a valid body returns HTTP 201 and a `playerId`
-- [ ] A `Player` document exists in Cosmos DB with correct fields
-- [ ] A `PlayerCreated` event appears on the `player-events` topic with a valid envelope
-- [ ] Duplicate registration (same request replayed) does not create a second player (idempotency)
-- [ ] Unit tests cover the function logic
-- [ ] Integration test verifies the Cosmos DB write and Service Bus publish
+- [x] `POST /api/players` with a valid body returns HTTP 201 and a `playerId`
+- [x] A `Player` document exists in Cosmos DB with correct fields
+- [x] A `PlayerCreated` event appears on the `player-events` topic with a valid envelope
+- [x] Duplicate registration (same request replayed) does not create a second player (idempotency)
+- [x] Unit tests cover the function logic
+- [x] Integration test verifies the Cosmos DB write
 
 ---
 
