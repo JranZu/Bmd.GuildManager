@@ -154,7 +154,7 @@ This document serves two purposes:
 
 ### Phase 3 — CI/CD Pipeline Activation
 
-**Status:** ⬜
+**Status:** ✅
 
 **Goal:** Activate the existing CI/CD pipeline so every push to `main` builds, tests, and deploys automatically.
 
@@ -171,12 +171,12 @@ This document serves two purposes:
 
 **Acceptance Criteria:**
 
-- [ ] A push to `main` triggers the pipeline
-- [ ] Backend build and test job passes
-- [ ] Frontend build job passes
-- [ ] Backend deploys successfully to Azure Functions
-- [ ] Frontend deploys successfully to Azure Static Web Apps
-- [ ] A pull request targeting `main` runs build and test jobs but does not deploy
+- [x] A push to `main` triggers the pipeline
+- [x] Backend build and test job passes
+- [x] Frontend build job passes
+- [x] Backend deploys successfully to Azure Functions
+- [x] Frontend deploys successfully to Azure Static Web Apps
+- [x] A pull request targeting `main` runs build and test jobs but does not deploy
 
 ---
 
