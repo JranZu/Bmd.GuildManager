@@ -69,7 +69,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Publish backend
-        run: dotnet publish ./backend --configuration Release --output ./publish/backend
+        run: dotnet publish ./backend/Bmd.GuildManager.Functions --configuration Release --output ./publish/backend
 
       - name: Login to Azure
         uses: Azure/login@v2
