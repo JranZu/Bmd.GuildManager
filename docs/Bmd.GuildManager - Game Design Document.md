@@ -59,19 +59,50 @@ The player does not directly control characters during quests.
 
 Each player can maintain multiple adventurers.
 
-Characters have simple attributes:
+Characters have the following attributes:
 
-| Attribute | Description             |
-| --------- | ----------------------- |
-| Level     | overall experience      |
-| Strength  | combat effectiveness    |
-| Luck      | affects loot quality    |
-| Endurance | affects survival chance |
+| Attribute | Description |
+| --------- | ----------- |
+| Level | Numeric value starting at 1. Increases as XP thresholds are reached. |
+| XP | Accumulated experience earned from completing quests. Increases with every quest regardless of outcome, with more XP awarded for harder quests and better outcomes. |
+| Strength | Combat effectiveness. Contributes to Team Power during quest resolution. |
+| Luck | Affects loot quality and loot drop probability. |
+| Endurance | Affects survival chance during dangerous quest outcomes. |
+
+### Character Tier
+
+A character's Tier is a derived classification representing their current overall power level. It is not stored directly — it is calculated from the items they have equipped.
+
+The tier scale used across the entire game (characters, items, quests) is:
+
+| Tier | Numeric Value |
+| ---- | ------------- |
+| Novice | 1 |
+| Apprentice | 2 |
+| Veteran | 3 |
+| Elite | 4 |
+| Legendary | 5 |
+
+Character Tier is calculated as:
+
+```
+Character Tier = sum of (tier numeric value of each equipped item) ÷ total equipment slots
+```
+
+The divisor is always total equipment slots, not the number of filled slots. A character with one Legendary item equipped and four empty slots is Novice-tier, not Legendary. Tier is rounded to the nearest integer and mapped back to the tier name.
+
+A character with no items equipped has a tier of Novice (1).
+
+### Equipment Slots
+
+Each character has a fixed number of equipment slots. The exact number of slots and their named types (e.g. weapon, armor, ring) are to be defined in the Pre-Phase Design session for Phase 13.
 
 Additional character properties:
 
-* Equipment
-* Current status (Idle / On Quest / Dead)
+* EquipmentIds — list of item IDs currently equipped, one per filled slot
+* Xp — accumulated experience points
+* Level — current numeric level derived from XP thresholds (exact thresholds defined in Phase 15 pre-phase design)
+* Current status: Idle / OnQuest / Dead
 
 Characters that die are permanently removed from the guild.
 
@@ -85,27 +116,45 @@ Quests are time based activities that produce loot.
 
 Each quest has:
 
-| Property             | Example             |
-| -------------------- | ------------------- |
-| Difficulty           | Easy / Hard / Epic  |
-| Duration             | 1–30 minutes        |
-| Required Adventurers | 1–5                 |
-| Risk Level           | Low / Medium / High |
+| Property | Description |
+| -------- | ----------- |
+| Name | Procedurally generated from word-part combinations |
+| Tier | Novice / Apprentice / Veteran / Elite / Legendary — aligns with the global tier scale |
+| Duration | 1–30 minutes, scaled to tier |
+| Required Adventurers | 1–5, scaled to tier |
+| Risk Level | Low / Medium / High |
+| Difficulty Rating | Numeric value representing the quest's power threshold. Used in quest resolution formula. Definition and ranges to be finalized in Phase 8 pre-phase design. |
+
+### Quest Generation and Availability
+
+Quests are procedurally generated. They are not a fixed list. At any given time, the system maintains a pool of available quests in the Quests Cosmos DB container. At least 2 quests must be available per tier at all times. A timer-triggered function is responsible for ensuring this minimum is maintained by generating new quests when supply falls below the threshold.
+
+Quests are a shared world resource. A quest in Available status can be claimed by any player. When a player starts a quest, its status transitions from Available to InProgress and it becomes associated with that player and their assigned characters. This transition must be protected by optimistic concurrency (ETag) to prevent two players from claiming the same quest simultaneously.
+
+The quest lifecycle is:
+
+```
+Available → InProgress → Completed → Archived (Blob Storage) → Deleted from Cosmos
+```
+
+The Quests container is operational state only and should remain small (approximately 20–40 active documents at any time). Completed quests are archived to Blob Storage and deleted from Cosmos.
+
+Quest documents include an ActiveQuestSnapshot that is embedded on each assigned Character document at quest start. This snapshot contains enough information (questId, name, tier, estimatedCompletionAt) to render the character's current quest without a second lookup. It is cleared when the quest resolves.
 
 Example quests:
 
-Beginner Quest
 Goblin Cave
+Novice tier
 1 adventurer
 2 minutes
 
-Veteran Quest
 Bandit Stronghold
+Veteran tier
 2 adventurers
 5 minutes
 
-Epic Quest
 Dragon Lair
+Legendary tier
 5 adventurers
 20 minutes
 
@@ -129,12 +178,23 @@ Even successful quests have a small chance of character death.
 Quest outcomes are calculated using:
 
 ```
-Team Power = sum(character stats + equipment)
+Character Base Power      = Strength + Luck + Endurance + (Level × 2)
+Character Equipment Bonus = sum of all stat bonuses from equipped items
+Character Total Power     = Base Power + Equipment Bonus
 
-vs
-
-Quest Difficulty
+Team Power = sum of all assigned characters' Total Power
 ```
+
+Outcome Thresholds — These are initial values and are expected to be tuned. They should be stored in Azure App Configuration (Phase 28), not hardcoded.
+
+| Team Power vs Quest Difficulty Rating | Outcome |
+| ------------------------------------- | ------- |
+| ≥ 150% | Success |
+| 100–149% | Partial Success |
+| 60–99% | Failure |
+| < 60% | Catastrophic Failure |
+
+The exact numeric ranges for difficultyRating per quest tier, and the exact death probability values per outcome type, are to be finalized in the Pre-Phase Design session for Phase 9.
 
 The system publishes a unified **QuestResolved** event that captures the outcome type, character survival status, and resulting effects such as loot generation or gold awards.
 
@@ -157,12 +217,26 @@ Loot is procedurally generated.
 
 Each item contains:
 
-| Property | Example                   |
-| -------- | ------------------------- |
-| Name     | Sword of Mild Regret      |
-| Tier     | Beginner / Veteran / Epic |
-| Stats    | Strength +4               |
-| Rarity   | Common / Rare / Legendary |
+| Property | Description |
+| -------- | ----------- |
+| Name | Procedurally generated from word-part combinations |
+| Tier | Novice / Apprentice / Veteran / Elite / Legendary |
+| Rarity | Common / Rare / Legendary |
+| StrengthBonus | Integer bonus to character Strength when equipped. 0 if not a strength item. |
+| LuckBonus | Integer bonus to character Luck when equipped. 0 if not a luck item. |
+| EnduranceBonus | Integer bonus to character Endurance when equipped. 0 if not an endurance item. |
+| BasePrice | Base gold value used in the market pricing formula. Defined per tier and rarity. Exact values to be defined in Phase 11 pre-phase design. |
+| Status | InInventory / Equipped / ListedForSale / Sold / Discarded / Lost |
+| OwnerId | PlayerId of the current owner |
+| CharacterId | CharacterId of the character currently equipped to (null if not equipped) |
+
+### Item Drop Tier Rules
+
+Items that drop from a quest are at or below the quest's tier. Finding an item more than one tier above the quest's tier is possible but very rare. In normal play the player should expect to receive items at or below the tier of quest they are running.
+
+Example: a Veteran-tier quest will typically produce Veteran or lower items. An Elite item from a Veteran quest is a rare bonus, not the norm. A Legendary item from a Veteran quest does not occur.
+
+The exact stat bonus ranges per tier and rarity are to be defined in the Pre-Phase Design session for Phase 11.
 
 Items can be:
 
@@ -179,66 +253,19 @@ Procedural item naming is used to increase variety.
 
 ---
 
-# 8. Market System
-
-The market allows players to sell items.
-
-Demand is influenced by a simulated NPC population.
-
-Item prices are determined by:
-
-```
-base price
-× population demand
-÷ current market supply
-```
-
-Example scenario:
-
-Population
-
-Beginner adventurers: 1000
-Epic heroes: 10
-
-Result
-
-Beginner gear sells quickly and for higher prices.
-Epic gear sells slowly due to limited buyers.
-
-This encourages diverse quest strategies.
-
-### Market Lifecycle
-
-The full lifecycle of a market listing:
-
-```
-Player lists item
-→ ItemListed event published
-→ pricing service calculates demand
-→ listing stored in database
-→ potential sale scheduled
-→ ItemSold event published when purchased
-→ gold credited to seller
-```
-
-Players may also cancel an active listing before it is sold. Canceling a listing returns the item to the player's inventory.
-
-Gold earned from market sales is credited to the guild balance through the economy system.
-
----
-
 # 9. Simulated Population
 
 The world population consists of aggregated tiers rather than individual NPCs.
 
 Example population state:
 
-| Tier                 | Population |
-| -------------------- | ---------- |
-| Beginner Adventurers | 1000       |
-| Veteran Adventurers  | 200        |
-| Elite Adventurers    | 50         |
-| Epic Heroes          | 10         |
+| Tier | Population |
+| ---- | ---------- |
+| Novice Adventurers | 1000 |
+| Apprentice Adventurers | 500 |
+| Veteran Adventurers | 200 |
+| Elite Adventurers | 50 |
+| Legendary Heroes | 10 |
 
 Population changes over time due to:
 
@@ -250,249 +277,8 @@ Population changes influence market demand.
 
 ---
 
-# 10. Population Updates
+# 21. Design Process
 
-Population updates occur periodically but only when players are active.
-
-Trigger model:
-
-```
-Player event occurs
-→ check if population update scheduled
-→ if not scheduled, queue update in 5 minutes
-```
-
-Population update adjusts tier counts with random probabilities.
-
-Example changes:
-
-* adventurer deaths
-* tier promotions
-* new beginners entering the population
-
-Minimum tier populations prevent collapse of the world economy.
-
----
-
-# 11. Guild Management
-
-Players manage several guild functions between quest completions.
-
-Management tasks include:
-
-Inventory management
-Equipment optimization
-Market selling
-Recruiting adventurers
-
-## Recruitment
-
-Recruitment provides randomly generated characters with varying stats.
-
-Recruiting an adventurer costs gold. The cost scales with the quality of the recruit.
-
-The recruitment flow:
-
-```
-Player requests recruitment
-→ guild gold balance validated
-→ gold deducted
-→ character generated
-→ character added to guild roster
-```
-
-If the guild does not have enough gold the recruitment is rejected.
-
-## Item Management
-
-Players can perform the following item actions:
-
-* Equip an item to an idle character
-* Unequip an item from a character
-* Discard an item permanently
-* List an item for sale on the market
-* Cancel an active market listing
-
-Items that are currently equipped cannot be sold or discarded until they are unequipped.
-
----
-
-# 12. User Interface
-
-The interface is designed as a simple web application with three main panels.
-
-Characters panel
-
-Displays character status and quest assignments.
-
-Active quests panel
-
-Displays quests currently running and their remaining time.
-
-Guild management panel
-
-Inventory
-Market
-Recruitment
-
-The interface emphasizes clarity and fast interaction.
-
----
-
-# 13. World Events
-
-The system can produce occasional global notifications.
-
-Examples:
-
-```
-Realm News
-
-An elite adventurer has fallen in battle.
-Elite population reduced.
-
-A surge of new adventurers enters the world.
-Beginner population increased.
-```
-
-These messages reflect population changes and reinforce world immersion.
-
----
-
-# 14. Technical Design Goals
-
-The project intentionally demonstrates cloud architecture concepts.
-
-Key goals:
-
-* event driven system design
-* asynchronous workflows
-* serverless compute
-* distributed state management
-* observability and monitoring
-* fault tolerant messaging
-
----
-
-# 15. Azure Architecture Overview
-
-Core services used in the project.
-
-Frontend
-
-Azure Static Web Apps
-
-Backend
-
-Azure Functions
-
-Messaging
-
-Azure Service Bus
-
-Database
-
-Azure Cosmos DB
-
-Realtime updates
-
-Azure SignalR
-
-Storage
-
-Azure Blob Storage
-
-Operational services
-
-Application Insights
-Azure Monitor
-Azure Key Vault
-Azure App Configuration
-API Management
-
----
-
-# 16. Event Driven System
-
-All gameplay mechanics operate through events.
-
-Example event flow:
-
-```
-QuestStarted
-→ QuestCompleted
-→ QuestResolved
-→ LootGenerated
-→ ItemAddedToInventory
-→ ItemListed
-→ ItemSold
-→ GoldCredited
-```
-
-Events are transported through Azure Service Bus.
-
-Scheduled messages handle quest completion timing.
-
----
-
-# 17. Observability
-
-Application Insights provides monitoring.
-
-Three categories of telemetry are tracked.
-
-Logs
-
-Quest events
-market activity
-character deaths
-
-Metrics
-
-quests completed
-items sold
-population distribution
-
-Traces
-
-end to end tracking of requests across functions
-
----
-
-# 18. Reliability
-
-The system incorporates several reliability patterns.
-
-Retry policies for failed message processing
-Dead letter queues for failed events
-Idempotent event handlers to prevent duplicates
-Alerting for abnormal error rates
-
----
-
-# 19. Development Goals
-
-The project is designed to serve as:
-
-* a practical distributed systems exercise
-* a refresher on Azure architecture
-* a demonstration project for interviews
-
-The architecture intentionally mirrors common enterprise patterns.
-
----
-
-# 20. Future Expansion Possibilities
-
-Potential additions if the project grows.
-
-Crafting systems
-Guild upgrades
-Seasonal world events
-Leaderboards
-Player guild competition
-Rare world bosses
-
-These are not required for the initial release.
+Each phase in the Project Roadmap has a Pre-Phase Design section listing questions that must be answered in a design conversation before story writing begins. Those answers are written into the relevant GDD sections before any code is written. No phase story is considered ready to implement until its Pre-Phase Design items are resolved and the GDD reflects the agreed decisions.
 
 ---

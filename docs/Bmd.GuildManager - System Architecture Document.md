@@ -169,11 +169,13 @@ Suggested containers:
 Players
 Characters
 Items
-Inventory
 MarketListings
 WorldPopulation
 Events
+Quests
 ```
+
+The Inventory container has been removed. The Items container now serves as both the item master record and inventory source. Inventory is read by filtering Items with ownerId equal to playerId and a non-terminal status. This removes duplicate state and avoids cross-container synchronization on item state changes.
 
 Cosmos DB advantages:
 
@@ -241,23 +243,22 @@ CreatedDate
 ### Character
 
 ```
-CharacterId
-PlayerId
-Name
-Level
-Strength
-Luck
-Endurance
-Status
-EquipmentIds
-```
-
-Status values:
-
-```
-Idle
-OnQuest
-Dead
+id
+characterId
+playerId
+name
+level
+xp
+strength
+luck
+endurance
+status (Idle / OnQuest / Dead)
+equipmentIds
+activeQuestSnapshot (nullable)
+  questId
+  name
+  tier
+  estimatedCompletionAt
 ```
 
 ---
@@ -265,13 +266,44 @@ Dead
 ### Item
 
 ```
-ItemId
-Name
-Tier
-Rarity
-Stats
-OwnerId
+id
+itemId
+name
+tier (Novice / Apprentice / Veteran / Elite / Legendary)
+rarity (Common / Rare / Legendary)
+strengthBonus
+luckBonus
+enduranceBonus
+basePrice
+status (InInventory / Equipped / ListedForSale / Sold / Discarded / Lost)
+ownerId
+characterId (nullable)
 ```
+
+Partition key: /ownerId (supports efficient per-player inventory and character item queries)
+
+---
+
+### Quest
+
+`
+id
+questId
+name
+description
+tier (Novice / Apprentice / Veteran / Elite / Legendary)
+difficultyRating
+durationSeconds
+requiredAdventurers
+riskLevel (Low / Medium / High)
+status (Available / InProgress / Completed)
+playerId (nullable)
+characterIds (nullable)
+startedAt (nullable)
+estimatedCompletionAt (nullable)
+`
+
+Partition key: /questId (self-partitioned; container is small and bounded)
 
 ---
 
@@ -293,10 +325,11 @@ CreatedDate
 Single global record.
 
 ```
-BeginnerPopulation
+NovicePopulation
+ApprenticePopulation
 VeteranPopulation
 ElitePopulation
-EpicPopulation
+LegendaryPopulation
 PopulationUpdateScheduled
 LastUpdated
 ```
