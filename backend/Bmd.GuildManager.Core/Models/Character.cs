@@ -3,16 +3,18 @@
 namespace Bmd.GuildManager.Core.Models;
 
 public record Character(
-	[property: JsonPropertyName("id")]             string Id,
-	[property: JsonPropertyName("characterId")]    Guid CharacterId,
-	[property: JsonPropertyName("playerId")]       Guid PlayerId,
-	[property: JsonPropertyName("name")]           string Name,
-	[property: JsonPropertyName("level")]          int Level,
-	[property: JsonPropertyName("strength")]       int Strength,
-	[property: JsonPropertyName("luck")]           int Luck,
-	[property: JsonPropertyName("endurance")]      int Endurance,
-	[property: JsonPropertyName("status")]         CharacterStatus Status,
-	[property: JsonPropertyName("equipmentIds")]   IReadOnlyList<Guid> EquipmentIds)
+	[property: JsonPropertyName("id")]                    string Id,
+	[property: JsonPropertyName("characterId")]           Guid CharacterId,
+	[property: JsonPropertyName("playerId")]              Guid PlayerId,
+	[property: JsonPropertyName("name")]                  string Name,
+	[property: JsonPropertyName("level")]                 int Level,
+	[property: JsonPropertyName("strength")]              int Strength,
+	[property: JsonPropertyName("luck")]                  int Luck,
+	[property: JsonPropertyName("endurance")]             int Endurance,
+	[property: JsonPropertyName("status")]                CharacterStatus Status,
+	[property: JsonPropertyName("equipmentIds")]          IReadOnlyList<Guid> EquipmentIds,
+	[property: JsonPropertyName("xp")]                   int Xp,
+	[property: JsonPropertyName("activeQuestSnapshot")]  ActiveQuestSnapshot? ActiveQuestSnapshot)
 {
 	public static Character Create(
 		Guid playerId,
@@ -24,16 +26,18 @@ public record Character(
 	{
 		var characterId = Guid.NewGuid();
 		return new Character(
-			Id:           characterId.ToString(),
-			CharacterId:  characterId,
-			PlayerId:     playerId,
-			Name:         name,
-			Level:        level,
-			Strength:     strength,
-			Luck:         luck,
-			Endurance:    endurance,
-			Status:       CharacterStatus.Idle,
-			EquipmentIds: []);
+			Id:                   characterId.ToString(),
+			CharacterId:          characterId,
+			PlayerId:             playerId,
+			Name:                 name,
+			Level:                level,
+			Strength:             strength,
+			Luck:                 luck,
+			Endurance:            endurance,
+			Status:               CharacterStatus.Idle,
+			EquipmentIds:         [],
+			Xp:                   0,
+			ActiveQuestSnapshot:  null);
 	}
 
 	public static Character CreateWithId(
@@ -46,15 +50,23 @@ public record Character(
 	int endurance)
 	{
 		return new Character(
-			Id: characterId.ToString(),
-			CharacterId: characterId,
-			PlayerId: playerId,
-			Name: name,
-			Level: level,
-			Strength: strength,
-			Luck: luck,
-			Endurance: endurance,
-			Status: CharacterStatus.Idle,
-			EquipmentIds: []);
+			Id:                   characterId.ToString(),
+			CharacterId:          characterId,
+			PlayerId:             playerId,
+			Name:                 name,
+			Level:                level,
+			Strength:             strength,
+			Luck:                 luck,
+			Endurance:            endurance,
+			Status:               CharacterStatus.Idle,
+			EquipmentIds:         [],
+			Xp:                   0,
+			ActiveQuestSnapshot:  null);
 	}
 }
+
+public record ActiveQuestSnapshot(
+	[property: JsonPropertyName("questId")]               Guid QuestId,
+	[property: JsonPropertyName("name")]                  string Name,
+	[property: JsonPropertyName("tier")]                  string Tier,
+	[property: JsonPropertyName("estimatedCompletionAt")] DateTimeOffset EstimatedCompletionAt);

@@ -60,16 +60,18 @@ public class HandleCharacterCreatedFunction(
 		}
 
 		var character = new Character(
-			Id: data.CharacterId.ToString(),
-			CharacterId: data.CharacterId,
-			PlayerId: data.PlayerId,
-			Name: data.Name,
-			Level: data.Level,
-			Strength: data.Strength,
-			Luck: data.Luck,
-			Endurance: data.Endurance,
-			Status: CharacterStatus.Idle,
-			EquipmentIds: []);
+			Id:                  data.CharacterId.ToString(),
+			CharacterId:         data.CharacterId,
+			PlayerId:            data.PlayerId,
+			Name:                data.Name,
+			Level:               data.Level,
+			Strength:            data.Strength,
+			Luck:                data.Luck,
+			Endurance:           data.Endurance,
+			Status:              CharacterStatus.Idle,
+			EquipmentIds:        [],
+			Xp:                  0,
+			ActiveQuestSnapshot: null);
 
 		await characterRepository.CreateAsync(character);
 

@@ -125,7 +125,7 @@ This document serves two purposes:
 - ✅ All required Azure services identified in SAD §3
 - ✅ Container list defined in SAD §4 (note: Inventory container provisioned here will be removed — verified as part of GM-000-01)
 - ✅ Service Bus topic list defined in SAD §3
-- ⚠️ NOTE FOR FUTURE: The Inventory container was provisioned in this phase but has since been eliminated by design decision (GM-000-01). The Quests container was not provisioned. Both corrections should be made before Phase 8 begins — either in this phase's retroactive cleanup or as a task within Phase 8.
+- ✅ NOTE RESOLVED (GM-007.5-01): The Inventory container was deleted and the Quests and WorldNews containers were provisioned. Both infrastructure corrections were completed before Phase 8 began.
 
 **Work Items:**
 
@@ -342,9 +342,9 @@ This document serves two purposes:
 **Pre-Phase Design**
 > ⚠️ Questions must be answered in a design conversation and reflected in the GDD/SAD before Work Items begin. Do not start implementation until all items are marked ✅.
 
-- [ ] The Character C# model must be updated to include Xp and ActiveQuestSnapshot fields (per GM-000-01 SAD changes) before this phase begins
-- [ ] The Quests Cosmos DB container must be provisioned (container: Quests, partition key: /questId) — not yet created
-- [ ] The Inventory Cosmos DB container should be deleted or confirmed unused — it was provisioned in Phase 2 but eliminated by design decision
+- ✅ The Character C# model must be updated to include Xp and ActiveQuestSnapshot fields (per GM-000-01 SAD changes) before this phase begins
+- ✅ The Quests Cosmos DB container must be provisioned (container: Quests, partition key: /questId) — not yet created
+- ✅ The Inventory Cosmos DB container should be deleted or confirmed unused — it was provisioned in Phase 2 but eliminated by design decision
 - [ ] How many equipment slots does a character have and what are they named? (Required to define ActiveQuestSnapshot and character power calculation)
 - [ ] Does the player select a quest from an available board, or specify quest parameters? This determines the POST /api/quests request shape
 - [ ] Is GET /api/quests/available (the quest board endpoint) implemented in this phase or a separate one?
@@ -783,7 +783,6 @@ This document serves two purposes:
 - [ ] GDD §13 shows example messages using elite adventurer — these must now use the updated 5-tier names from GM-000-01. Confirm the message templates in GDD §13 have been updated.
 - [ ] How many news entries are retained in the WorldNews container? Is there a TTL or a max-entries cap?
 - [ ] What is the value of N in return the most recent N entries from GET /api/world/news?
-- [ ] Is WorldNews a new Cosmos DB container? If so, it was not provisioned in Phase 2 and needs to be added — either retroactively or as a task in this phase.
 
 **Work Items:**
 

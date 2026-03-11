@@ -60,4 +60,18 @@ public class CosmosCharacterRepository(CosmosClient cosmosClient) : ICharacterRe
 
 		return results.AsReadOnly();
 	}
+
+	public async Task UpdateAsync(Character character, string etag)
+	{
+		var options = new ItemRequestOptions
+		{
+			IfMatchEtag = etag
+		};
+
+		await Container.ReplaceItemAsync(
+			character,
+			character.Id,
+			new PartitionKey(character.PlayerId.ToString()),
+			options);
+	}
 }

@@ -13,6 +13,14 @@ public class FakeCharacterRepository : ICharacterRepository
         return Task.CompletedTask;
     }
 
+    public Task UpdateAsync(Character character, string etag)
+    {
+        var index = Characters.FindIndex(c => c.CharacterId == character.CharacterId);
+        if (index >= 0)
+            Characters[index] = character;
+        return Task.CompletedTask;
+    }
+
     public Task<Character?> FindByCharacterIdAsync(Guid characterId, Guid playerId)
     {
         var match = Characters.FirstOrDefault(c =>
