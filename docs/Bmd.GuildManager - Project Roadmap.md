@@ -44,7 +44,7 @@ This document serves two purposes:
 | 4 | Event Envelope & Shared Contracts | ✅ |
 | 5 | Player & Guild Creation | ✅ |
 | 6 | Player Onboarding Flow | ✅ |
-| 7 | Character Domain | ⬜ |
+| 7 | Character Domain | ✅ |
 | 8 | Quest Start | ⬜ |
 | 9 | Quest Completion & Resolution | ⬜ |
 | 10 | Character Death | ⬜ |
@@ -259,7 +259,7 @@ This document serves two purposes:
 
 ### Phase 7 — Character Domain
 
-**Status:** ⬜
+**Status:** ✅
 
 **Goal:** Implement the `CharacterCreated` event handler and character persistence so characters can be stored, retrieved, and validated for use in later phases.
 
@@ -273,10 +273,10 @@ This document serves two purposes:
 
 **Acceptance Criteria:**
 
-- [ ] A `CharacterCreated` event results in a persisted `Character` document with correct fields
-- [ ] `GET /api/players/{playerId}/characters` returns the correct roster
-- [ ] Character status defaults to `Idle` on creation
-- [ ] Unit tests cover status validation logic
+- [x] A `CharacterCreated` event results in a persisted `Character` document with correct fields
+- [x] `GET /api/players/{playerId}/characters` returns the correct roster
+- [x] Character status defaults to `Idle` on creation
+- [x] Unit tests cover status validation logic
 
 ---
 

@@ -1,0 +1,112 @@
+﻿using System.Text.Json;
+using Bmd.GuildManager.Core.Abstractions;
+using Bmd.GuildManager.Core.Data;
+using Bmd.GuildManager.Core.Events;
+using Bmd.GuildManager.Core.Models;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Logging;
+
+namespace Bmd.GuildManager.Functions.Functions;
+
+public class HandleStarterCharactersGrantedFunction(
+	IEventPublisher eventPublisher,
+	ILogger<HandleStarterCharactersGrantedFunction> logger)
+{
+	private static readonly JsonSerializerOptions JsonOptions = new()
+	{
+		PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+	};
+
+	[Function("HandleStarterCharactersGranted")]
+	public async Task RunAsync(
+		[ServiceBusTrigger("player-events", "starter-characters-sub",
+			Connection = "ServiceBusConnectionString")]
+		string message)
+	{
+		EventEnvelope<StarterCharactersGranted>? envelope;
+		try
+		{
+			envelope = JsonSerializer.Deserialize<EventEnvelope<StarterCharactersGranted>>(
+				message, JsonOptions);
+		}
+		catch (JsonException ex)
+		{
+			logger.LogWarning(ex,
+				"Received invalid StarterCharactersGranted JSON payload");
+			return;
+		}
+
+		if (envelope is null)
+		{
+			logger.LogWarning(
+				"Received null or undeserializable StarterCharactersGranted message");
+			return;
+		}
+
+		if (envelope.Data.CharacterIds is null)
+		{
+			logger.LogWarning(
+				"Received invalid StarterCharactersGranted message characterIds was null");
+			return;
+		}
+
+		var playerId = envelope.Data.PlayerId;
+		var characterIds = envelope.Data.CharacterIds;
+
+		logger.LogInformation(
+			"HandleStarterCharactersGranted received event for player {PlayerId} " +
+			"with {Count} characters",
+			playerId,
+			characterIds.Count);
+
+		var usedNames = new HashSet<string>();
+
+		foreach (var characterId in characterIds)
+		{
+			var name = PickUniqueName(usedNames);
+			var character = Character.CreateWithId(
+				characterId: characterId,
+				playerId: playerId,
+				name: name,
+				level: 1,
+				strength: Random.Shared.Next(5, 11),
+				luck: Random.Shared.Next(5, 11),
+				endurance: Random.Shared.Next(5, 11));
+
+			var eventData = new CharacterCreated(
+				PlayerId: playerId,
+				CharacterId: character.CharacterId,
+				Name: character.Name,
+				Level: character.Level,
+				Strength: character.Strength,
+				Luck: character.Luck,
+				Endurance: character.Endurance);
+
+			var characterEnvelope = EventEnvelope<CharacterCreated>.Create(
+				source: "HandleStarterCharactersGrantedFunction",
+				correlationId: envelope.CorrelationId,
+				data: eventData);
+
+			await eventPublisher.PublishAsync(characterEnvelope);
+
+			logger.LogInformation(
+				"CharacterCreated event published for character {CharacterId} " +
+				"({Name}) for player {PlayerId}",
+				character.CharacterId,
+				character.Name,
+				playerId);
+		}
+	}
+
+	private static string PickUniqueName(HashSet<string> usedNames)
+	{
+		var available = StarterCharacterNames.Pool
+			.Where(n => !usedNames.Contains(n))
+			.ToList();
+
+		var pool = available.Count > 0 ? available : [.. StarterCharacterNames.Pool];
+		var name = pool[Random.Shared.Next(pool.Count)];
+		usedNames.Add(name);
+		return name;
+	}
+}

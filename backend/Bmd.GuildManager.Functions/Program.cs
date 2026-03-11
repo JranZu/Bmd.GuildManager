@@ -42,6 +42,7 @@ builder.Services.AddSingleton(_ =>
 });
 
 builder.Services.AddSingleton<IPlayerRepository, CosmosPlayerRepository>();
+builder.Services.AddSingleton<ICharacterRepository, CosmosCharacterRepository>();
 
 builder.Services.AddSingleton<IEventPublisher>(sp =>
     new ServiceBusEventPublisher(

@@ -25,11 +25,23 @@ public class OnboardPlayerFunction(
 	{
 		var envelope = JsonSerializer.Deserialize<EventEnvelope<PlayerCreated>>(message, JsonOptions);
 
-		if (envelope is null)
+		try
 		{
-			logger.LogWarning("Received null or undeserializable message on player-events");
+			envelope = JsonSerializer.Deserialize<EventEnvelope<PlayerCreated>>(
+				message, JsonOptions);
+		}
+		catch (JsonException ex)
+		{
+			logger.LogWarning(ex, "Received invalid PlayerCreated JSON payload");
 			return;
 		}
+
+		if (envelope is null)
+		{
+			logger.LogWarning("Received null PlayerCreated message");
+			return;
+		}
+
 
 		var playerId = envelope.Data.PlayerId;
 		var guildName = envelope.Data.GuildName;
