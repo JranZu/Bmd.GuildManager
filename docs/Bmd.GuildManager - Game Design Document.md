@@ -277,6 +277,38 @@ Population changes influence market demand.
 
 ---
 
+# 13. World Events
+
+The game publishes human-readable world news messages in response to key domain events. These messages are persisted to the WorldNews container and surfaced to players via the world news feed.
+
+## Message Templates
+
+### CharacterDied
+
+Messages are generated using the character's tier at the time of death:
+
+| Tier | Message |
+| ---- | ------- |
+| Novice | "A novice adventurer has fallen in battle." |
+| Apprentice | "An apprentice adventurer has fallen in battle." |
+| Veteran | "A veteran adventurer has fallen in battle." |
+| Elite | "An elite adventurer has fallen in battle." |
+| Legendary | "A legendary hero has fallen in battle." |
+
+### PopulationUpdated
+
+Messages are generated based on which tier changed and the direction of change:
+
+| Tier | Growth | Decline |
+| ---- | ------ | ------- |
+| Novice | "A surge of new adventurers enters the world. Novice population increased." | "The novice adventurer population has declined." |
+| Apprentice | "More apprentice adventurers are making their mark. Apprentice population increased." | "The apprentice adventurer population has declined." |
+| Veteran | "A new wave of veteran adventurers arrives. Veteran population increased." | "The veteran adventurer population has declined." |
+| Elite | "Elite adventurers grow in number. Elite population increased." | "The elite adventurer population has declined." |
+| Legendary | "A new legendary hero rises. Legendary population increased." | "The legendary hero population has declined." |
+
+---
+
 # 21. Design Process
 
 Each phase in the Project Roadmap has a Pre-Phase Design section listing questions that must be answered in a design conversation before story writing begins. Those answers are written into the relevant GDD sections before any code is written. No phase story is considered ready to implement until its Pre-Phase Design items are resolved and the GDD reflects the agreed decisions.

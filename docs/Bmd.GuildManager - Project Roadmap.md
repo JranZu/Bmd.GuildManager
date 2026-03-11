@@ -315,7 +315,6 @@ This document serves two purposes:
 - ✅ Character data model defined in SAD §4
 - ✅ CharacterCreated event shape defined in ECS §3
 - ✅ Status enum (Idle / OnQuest / Dead) confirmed
-- ⚠️ NOTE FOR FUTURE: Character model does not yet include Xp or ActiveQuestSnapshot fields added by GM-000-01. These must be added to the C# model and Cosmos DB documents before Phase 8 begins. Flag as a Phase 8 pre-requisite task.
 
 **Work Items:**
 
