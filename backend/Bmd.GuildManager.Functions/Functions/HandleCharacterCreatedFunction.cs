@@ -4,7 +4,6 @@ using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Bmd.GuildManager.Functions.Functions;
 
