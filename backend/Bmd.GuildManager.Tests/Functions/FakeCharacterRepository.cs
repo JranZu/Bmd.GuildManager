@@ -21,11 +21,12 @@ public class FakeCharacterRepository : ICharacterRepository
         return Task.CompletedTask;
     }
 
-    public Task<Character?> FindByCharacterIdAsync(Guid characterId, Guid playerId)
+    public Task<CosmosDocument<Character>?> FindByCharacterIdAsync(Guid characterId, Guid playerId)
     {
         var match = Characters.FirstOrDefault(c =>
             c.CharacterId == characterId && c.PlayerId == playerId);
-        return Task.FromResult(match);
+        return Task.FromResult(
+            match is null ? null : new CosmosDocument<Character>(match, "fake-etag"));
     }
 
     public Task<IReadOnlyList<Character>> GetByPlayerIdAsync(Guid playerId)

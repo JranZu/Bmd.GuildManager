@@ -27,14 +27,14 @@ public class CosmosCharacterRepository(CosmosClient cosmosClient) : ICharacterRe
 		}
 	}
 
-	public async Task<Character?> FindByCharacterIdAsync(Guid characterId, Guid playerId)
+	public async Task<CosmosDocument<Character>?> FindByCharacterIdAsync(Guid characterId, Guid playerId)
 	{
 		try
 		{
 			var response = await Container.ReadItemAsync<Character>(
 				characterId.ToString(),
 				new PartitionKey(playerId.ToString()));
-			return response.Resource;
+			return new CosmosDocument<Character>(response.Resource, response.ETag);
 		}
 		catch (CosmosException ex)
 			when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)

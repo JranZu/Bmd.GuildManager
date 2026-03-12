@@ -45,7 +45,7 @@ This document serves two purposes:
 | 5 | Player & Guild Creation | ✅ |
 | 6 | Player Onboarding Flow | ✅ |
 | 7 | Character Domain | ✅ |
-| 8 | Quest Start | ⬜ |
+| 8 | Quest Start | ✅  |
 | 9 | Quest Completion & Resolution | ⬜ |
 | 10 | Character Death | ⬜ |
 | 11 | Loot Generation | ⬜ |
@@ -333,7 +333,7 @@ This document serves two purposes:
 
 ### Phase 8 — Quest Start
 
-**Status:** ⬜
+**Status:** ✅ 
 
 **Goal:** Implement `StartQuestFunction` so a player can dispatch characters on a quest. This phase introduces Service Bus scheduled messages.
 
@@ -345,11 +345,11 @@ This document serves two purposes:
 - ✅ The Character C# model must be updated to include Xp and ActiveQuestSnapshot fields (per GM-000-01 SAD changes) before this phase begins
 - ✅ The Quests Cosmos DB container must be provisioned (container: Quests, partition key: /questId) — not yet created
 - ✅ The Inventory Cosmos DB container should be deleted or confirmed unused — it was provisioned in Phase 2 but eliminated by design decision
-- [ ] How many equipment slots does a character have and what are they named? (Required to define ActiveQuestSnapshot and character power calculation)
-- [ ] Does the player select a quest from an available board, or specify quest parameters? This determines the POST /api/quests request shape
-- [ ] Is GET /api/quests/available (the quest board endpoint) implemented in this phase or a separate one?
-- [ ] Is the quest generator function (timer-triggered, ensures minimum 2 available quests per tier) in scope for this phase or added as a new phase between 7 and 8?
-- [ ] What does the QuestStarted event payload need to include given the new Quest data model? (The current ECS QuestStarted record has questType as a string — does this change to questId referencing the Quests container?)
+- [x] How many equipment slots does a character have and what are they named? (Required to define ActiveQuestSnapshot and character power calculation)
+- [x] Does the player select a quest from an available board, or specify quest parameters? This determines the POST /api/quests request shape
+- [x] Is GET /api/quests/available (the quest board endpoint) implemented in this phase or a separate one?
+- [x] Is the quest generator function (timer-triggered, ensures minimum 2 available quests per tier) in scope for this phase or added as a new phase between 7 and 8?
+- [x] What does the QuestStarted event payload need to include given the new Quest data model? (The current ECS QuestStarted record has questType as a string — does this change to questId referencing the Quests container?)
 
 **Work Items:**
 
@@ -361,13 +361,13 @@ This document serves two purposes:
 
 **Acceptance Criteria:**
 
-- [ ] `POST /api/quests` with valid characters returns HTTP 202 and a `questId`
-- [ ] All assigned characters have status `OnQuest` in Cosmos DB
-- [ ] A `QuestStarted` event is published with correct fields
-- [ ] A `QuestCompleted` message is scheduled on Service Bus for the correct future time
-- [ ] Assigning a `Dead` or `OnQuest` character returns HTTP 409
-- [ ] Concurrent requests for the same character resolve correctly via ETag conflict detection
-- [ ] Unit and integration tests pass
+- [x] `POST /api/quests` with valid characters returns HTTP 202 and a `questId`
+- [x] All assigned characters have status `OnQuest` in Cosmos DB
+- [x] A `QuestStarted` event is published with correct fields
+- [x] A `QuestCompleted` message is scheduled on Service Bus for the correct future time
+- [x] Assigning a `Dead` or `OnQuest` character returns HTTP 409
+- [x] Concurrent requests for the same character resolve correctly via ETag conflict detection
+- [x] Unit and integration tests pass
 
 ---
 

@@ -13,7 +13,15 @@ public class QuestEventsTests
     [Fact]
     public void QuestStarted_RoundTrip()
     {
-        var payload = new QuestStarted(Guid.NewGuid(), Guid.NewGuid(), "Combat", [Guid.NewGuid(), Guid.NewGuid()], 300);
+        var estimatedCompletionAt = DateTimeOffset.UtcNow.AddSeconds(300);
+        var payload = new QuestStarted(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Combat",
+            "Rare",
+            [Guid.NewGuid(), Guid.NewGuid()],
+            300,
+            estimatedCompletionAt);
         var envelope = EventEnvelope<QuestStarted>.Create("quest-service", Guid.NewGuid(), payload);
 
         var json = JsonSerializer.Serialize(envelope, JsonOptions);
@@ -22,8 +30,10 @@ public class QuestEventsTests
         Assert.NotNull(result);
         Assert.Equal("QuestStarted", result.EventType);
         Assert.Equal(payload.QuestId, result.Data.QuestId);
-        Assert.Equal(payload.Characters, result.Data.Characters);
+        Assert.Equal(payload.QuestTier, result.Data.QuestTier);
+        Assert.Equal(payload.CharacterIds, result.Data.CharacterIds);
         Assert.Equal(payload.DurationSeconds, result.Data.DurationSeconds);
+        Assert.Equal(payload.EstimatedCompletionAt, result.Data.EstimatedCompletionAt);
     }
 
     [Fact]

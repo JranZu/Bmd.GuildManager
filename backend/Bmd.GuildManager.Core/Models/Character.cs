@@ -68,5 +68,6 @@ public record Character(
 public record ActiveQuestSnapshot(
 	[property: JsonPropertyName("questId")]               Guid QuestId,
 	[property: JsonPropertyName("name")]                  string Name,
+	[property: JsonPropertyName("description")]           string Description,
 	[property: JsonPropertyName("tier")]                  string Tier,
 	[property: JsonPropertyName("estimatedCompletionAt")] DateTimeOffset EstimatedCompletionAt);

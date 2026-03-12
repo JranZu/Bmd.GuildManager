@@ -4,6 +4,7 @@ using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Functions.Publishers;
 using Bmd.GuildManager.Functions.Repositories;
 using Bmd.GuildManager.Functions.Serialization;
+using Bmd.GuildManager.Functions.Services;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
@@ -43,6 +44,9 @@ builder.Services.AddSingleton(_ =>
 
 builder.Services.AddSingleton<IPlayerRepository, CosmosPlayerRepository>();
 builder.Services.AddSingleton<ICharacterRepository, CosmosCharacterRepository>();
+builder.Services.AddSingleton<IQuestRepository, CosmosQuestRepository>();
+builder.Services.AddSingleton<IQuestGeneratorService, QuestGeneratorService>();
+builder.Services.AddSingleton<IMessageScheduler, ServiceBusMessageScheduler>();
 
 builder.Services.AddSingleton<IEventPublisher>(sp =>
     new ServiceBusEventPublisher(

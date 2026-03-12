@@ -1,0 +1,60 @@
+﻿### Get Available Quests — happy path
+GET {{baseUrl}}/quests/available?code={{functionKey}}
+
+### Get Available Quests — expect empty array on fresh environment
+# Run this before the generator has fired to confirm 200 + []
+GET {{baseUrl}}/quests/available?code={{functionKey}}
+
+### Start Quest — happy path
+# Prerequisites:
+#   1. Run createPlayerHappyPath from players.http to get a playerId
+#   2. Wait for onboarding to fire and CharacterCreated to persist
+#   3. Run Get Characters from players.http to get a characterId
+#   4. Run Get Available Quests above and copy a questId
+# @name startQuestHappyPath
+POST {{baseUrl}}/quests?code={{functionKey}}
+Content-Type: application/json
+
+{
+  "playerId": "a2b786bc-de2d-45f2-bef4-11e0fbd3588f",
+  "questId": "79da3aaa-c095-408d-a608-1897557e99d5",
+  "characterIds": ["e8ea1496-5c50-450a-9cb5-64a7b04eb07e"]
+}
+
+### Start Quest — quest not found (expect 409)
+POST {{baseUrl}}/quests?code={{functionKey}}
+Content-Type: application/json
+
+{
+  "playerId": "00000000-0000-0000-0000-000000000001",
+  "questId": "00000000-0000-0000-0000-000000000000",
+  "characterIds": ["00000000-0000-0000-0000-000000000002"]
+}
+
+### Start Quest — wrong character count (expect 400)
+# Uses a real questId that requires more adventurers than provided
+POST {{baseUrl}}/quests?code={{functionKey}}
+Content-Type: application/json
+
+{
+  "playerId": "PASTE_PLAYER_ID_HERE",
+  "questId": "PASTE_MULTI_ADVENTURER_QUEST_ID_HERE",
+  "characterIds": ["PASTE_CHARACTER_ID_HERE"]
+}
+
+### Start Quest — invalid JSON (expect 400)
+POST {{baseUrl}}/quests?code={{functionKey}}
+Content-Type: application/json
+
+this is not valid json
+
+### Start Quest — same quest twice (expect 409 on second call)
+# Run startQuestHappyPath first, then run this with the same questId
+POST {{baseUrl}}/quests?code={{functionKey}}
+Content-Type: application/json
+
+{
+  "playerId": "PASTE_PLAYER_ID_HERE",
+  "questId": "PASTE_SAME_QUEST_ID_HERE",
+  "characterIds": ["PASTE_DIFFERENT_CHARACTER_ID_HERE"]
+}

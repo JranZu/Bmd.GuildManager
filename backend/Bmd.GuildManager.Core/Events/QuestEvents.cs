@@ -6,8 +6,10 @@ public record QuestStarted(
     [property: JsonPropertyName("questId")] Guid QuestId,
     [property: JsonPropertyName("playerId")] Guid PlayerId,
     [property: JsonPropertyName("questType")] string QuestType,
-    [property: JsonPropertyName("characters")] IReadOnlyList<Guid> Characters,
-    [property: JsonPropertyName("durationSeconds")] int DurationSeconds);
+    [property: JsonPropertyName("questTier")] string QuestTier,
+    [property: JsonPropertyName("characterIds")] IReadOnlyList<Guid> CharacterIds,
+    [property: JsonPropertyName("durationSeconds")] int DurationSeconds,
+    [property: JsonPropertyName("estimatedCompletionAt")] DateTimeOffset EstimatedCompletionAt);
 
 public record QuestCompleted(
     [property: JsonPropertyName("questId")] Guid QuestId,
