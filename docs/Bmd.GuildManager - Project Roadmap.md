@@ -382,27 +382,40 @@ This document serves two purposes:
 **Pre-Phase Design**
 > ⚠️ Questions must be answered in a design conversation and reflected in the GDD/SAD before Work Items begin. Do not start implementation until all items are marked ✅.
 
-- [ ] What are the numeric difficultyRating ranges per quest tier? (Novice = ?, Apprentice = ?, Veteran = ?, Elite = ?, Legendary = ?)
-- [ ] Confirm or adjust outcome threshold percentages: Success ≥150%, Partial Success 100–149%, Failure 60–99%, Catastrophic Failure <60%
-- [ ] What is the character death probability per outcome type? (e.g. Success: 2%, Partial Success: 5%, Failure: 15%, Catastrophic Failure: 60% — exact values needed)
-- [ ] Does XP get awarded in this phase? If yes, what are the XP amounts per outcome type and quest tier?
-- [ ] What is the gold award amount per outcome type and quest tier?
-- [ ] Does the QuestResolved event need to include any new fields to support XP awarding and character tier calculation downstream?
-- [ ] Should the Quest document status be updated to Completed and archived in this phase, or is that deferred?
+- ✅ What are the numeric difficultyRating ranges per quest tier? — Novice: 9–60, Apprentice: 60–120, Veteran: 120–240, Elite: 240–480, Legendary: 480–960. Derived from `GameConstants` (`MinStatValue=3`, `MaxStatValue=10`, `StatCount=3`). Defined in GDD §5.
+- ✅ Confirm or adjust outcome threshold percentages — Four outcomes confirmed: CriticalSuccess ≥150%, Success 100–149%, Failure 60–99%, CatastrophicFailure <60%. `PartialSuccess` removed. Defined in GDD §6.
+- ✅ What is the character death probability per outcome type? — CriticalSuccess: 1%, Success: 2%, Failure: 20%, CatastrophicFailure: 60%. Defined in GDD §6.
+- ✅ Does XP get awarded in this phase? — Yes. XP is awarded per character per quest resolution inside `ResolveQuestFunction`. Thresholds and level-up check also happen here. See GDD §4 (XP thresholds) and GDD §6 (XP per tier/outcome).
+- ✅ What is the gold award amount per outcome type and quest tier? — Defined in GDD §6 gold table. Zero for Failure and CatastrophicFailure.
+- ✅ Does the QuestResolved event need new fields? — Yes. `questTier` (string) added at top level; `xpAwarded` (int) added per character entry in the `characters` array. `lootGenerated` renamed to `lootEligible`. Defined in ECS §4.
+- ✅ Should the Quest document be archived in this phase? — Yes. After `QuestResolved` is published, the quest is serialized to Blob Storage (container: `quest-archive`, path: `{year}/{month}/{questId}.json`) and deleted from Cosmos DB. Defined in GDD §6.
 
 **Work Items:**
 
 - Implement `ResolveQuestFunction` triggered by the `QuestCompleted` Service Bus message
-- Calculate quest outcome using team power vs. difficulty (GDD §6)
-- Set character statuses back to `Idle` for survivors
-- Publish `QuestResolved` with correct outcome, character survival list, and reward flags
+- Calculate quest outcome using team power vs. difficulty with ±25% random variance (GDD §6)
+- Apply CriticalSuccess, Success, Failure, CatastrophicFailure outcome logic per GDD §6
+- Award XP per character per outcome and quest tier; evaluate and apply level-up if threshold crossed
+- Evaluate character death probability per outcome type (GDD §6); publish `CharacterDied` for casualties
+- Set surviving character statuses back to `Idle` in Cosmos DB
+- Award gold per outcome and quest tier (GDD §6)
+- Create `GameConstants.cs` in `Bmd.GuildManager.Core` with `MinStatValue = 3`, `MaxStatValue = 10`, `StatCount = 3`
+- Update `QuestFactory.cs` difficulty ranges to match GDD §5 (Novice: 9–60, Apprentice: 60–120, Veteran: 120–240, Elite: 240–480, Legendary: 480–960)
+- Publish `QuestResolved` with correct outcome, `questTier`, character survival list, `xpAwarded` per character, `lootEligible`, and `goldAwarded`
+- After `QuestResolved` is published: serialize quest document to Blob Storage (`quest-archive/{year}/{month}/{questId}.json`) and delete it from Cosmos DB
 
 **Acceptance Criteria:**
 
 - [ ] A `QuestCompleted` message triggers resolution
-- [ ] `QuestResolved` is published with one of: `Success`, `PartialSuccess`, `Failure`, `CatastrophicFailure`
+- [ ] `QuestResolved` is published with one of: `CriticalSuccess`, `Success`, `Failure`, `CatastrophicFailure`
+- [ ] `QuestResolved` includes `questTier` at top level and `xpAwarded` per character
+- [ ] `lootEligible` and `goldAwarded` fields in `QuestResolved` are correct for each outcome type
 - [ ] Surviving characters return to `Idle` status in Cosmos DB
-- [ ] `lootGenerated` and `goldAwarded` fields in `QuestResolved` are correct for each outcome type
+- [ ] XP is applied to each surviving character; level increases when XP threshold is crossed
+- [ ] CriticalSuccess outcome is covered by unit tests including boundary and cap conditions
+- [ ] Quest document is absent from Cosmos DB after resolution
+- [ ] Quest JSON is present in Blob Storage (`quest-archive/{year}/{month}/{questId}.json`) after resolution
+- [ ] `lootEligible` replaces `lootGenerated` in all references (events, C# records, tests)
 - [ ] Replaying a `QuestCompleted` message does not resolve the same quest twice
 - [ ] Unit tests cover all four outcome types including boundary conditions
 
@@ -474,8 +487,8 @@ This document serves two purposes:
 
 **Acceptance Criteria:**
 
-- [ ] `QuestResolved` with `lootGenerated: true` produces a `LootGenerated` event
-- [ ] `QuestResolved` with `lootGenerated: false` produces no loot
+- [ ] `QuestResolved` with `lootEligible: true` produces a `LootGenerated` event
+- [ ] `QuestResolved` with `lootEligible: false` produces no loot
 - [ ] Generated item exists in Cosmos DB with status `InInventory`
 - [ ] Item tier and rarity values are valid per GDD §7
 - [ ] `LootGenerated` is followed by `ItemAddedToInventory` (see Phase 12)
@@ -600,7 +613,7 @@ This document serves two purposes:
 - [ ] How is the tier of a recruited character determined — fully random, weighted by guild progress, or player-selectable?
 - [ ] What are the base stat ranges per character tier at recruitment? (These need to be defined separately from item stat ranges)
 - [ ] What are the XP thresholds per level? (e.g. Level 1→2 = 100 XP, Level 2→3 = 250 XP, etc.)
-- [ ] Does level increase happen in this phase, in Phase 9 (quest resolution), or both? Where does the leveling logic live?
+- ✅ Does level increase happen in this phase, in Phase 9 (quest resolution), or both? Where does the leveling logic live? — XP award and level-up check both happen in Phase 9 `ResolveQuestFunction`. Phase 15 generates new characters at Level 1 with 0 XP; no level-up logic is needed here.
 - [ ] What is the maximum character level?
 
 **Work Items:**

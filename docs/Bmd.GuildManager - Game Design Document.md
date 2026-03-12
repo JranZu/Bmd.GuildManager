@@ -59,12 +59,24 @@ The player does not directly control characters during quests.
 
 Each player can maintain multiple adventurers.
 
+### Game Constants
+
+The following constants govern character stat generation and quest difficulty scaling throughout the system.
+
+| Constant | Value | Description |
+| -------- | ----- | ----------- |
+| `MinStatValue` | 3 | Minimum value for any base stat (Strength, Luck, Endurance) at character creation |
+| `MaxStatValue` | 10 | Maximum value for any base stat at character creation |
+| `StatCount` | 3 | Number of stats (Strength, Luck, Endurance) |
+
+These constants are defined in `GameConstants.cs` in `Bmd.GuildManager.Core` and are referenced by `QuestFactory.cs` for difficulty range calculation.
+
 Characters have the following attributes:
 
 | Attribute | Description |
 | --------- | ----------- |
-| Level | Numeric value starting at 1. Increases as XP thresholds are reached. |
-| XP | Accumulated experience earned from completing quests. Increases with every quest regardless of outcome, with more XP awarded for harder quests and better outcomes. |
+| Level | Numeric value starting at 1, maximum 20. Increases when accumulated XP reaches the threshold for the next level. |
+| XP | Accumulated experience earned per character per quest resolution. XP is awarded regardless of outcome; more is awarded for harder quests and better outcomes. Exact amounts per tier and outcome are defined in GDD §6. |
 | Strength | Combat effectiveness. Contributes to Team Power during quest resolution. |
 | Luck | Affects loot quality and loot drop probability. |
 | Endurance | Affects survival chance during dangerous quest outcomes. |
@@ -97,11 +109,41 @@ A character with no items equipped has a tier of Novice (1).
 
 Each character has a fixed number of equipment slots. The exact number of slots and their named types (e.g. weapon, armor, ring) are to be defined in the Pre-Phase Design session for Phase 13.
 
+### XP Thresholds
+
+| Level | XP Required to Reach Next Level |
+| ----- | -------------------------------- |
+| 1 → 2 | 100 |
+| 2 → 3 | 250 |
+| 3 → 4 | 500 |
+| 4 → 5 | 1,000 |
+| 5 → 6 | 2,000 |
+| 6 → 7 | 4,000 |
+| 7 → 8 | 8,000 |
+| 8 → 9 | 16,000 |
+| 9 → 10 | 32,000 |
+| 10 → 11 | 64,000 |
+| 11 → 12 | 128,000 |
+| 12 → 13 | 256,000 |
+| 13 → 14 | 512,000 |
+| 14 → 15 | 1,024,000 |
+| 15 → 16 | 2,048,000 |
+| 16 → 17 | 4,096,000 |
+| 17 → 18 | 8,192,000 |
+| 18 → 19 | 16,384,000 |
+| 19 → 20 | 32,768,000 |
+
+Thresholds double each level starting from 100. Level 20 is the maximum level.
+
+### Retirement (Future Design Item)
+
+A Level 20 character who retires grants a permanent +1 bonus to their highest stat for all future characters created in that guild. The exact retirement mechanic — including how the bonus is stored, applied, and capped — is deferred to a future design session.
+
 Additional character properties:
 
 * EquipmentIds — list of item IDs currently equipped, one per filled slot
 * Xp — accumulated experience points
-* Level — current numeric level derived from XP thresholds (exact thresholds defined in Phase 15 pre-phase design)
+* Level — current numeric level derived from XP thresholds above
 * Current status: Idle / OnQuest / Dead
 
 Characters that die are permanently removed from the guild.
@@ -123,7 +165,24 @@ Each quest has:
 | Duration | 1–30 minutes, scaled to tier |
 | Required Adventurers | 1–5, scaled to tier |
 | Risk Level | Low / Medium / High |
-| Difficulty Rating | Numeric value representing the quest's power threshold. Used in quest resolution formula. Definition and ranges to be finalized in Phase 8 pre-phase design. |
+| Difficulty Rating | Numeric value representing the quest's power threshold. Used in quest resolution formula. Ranges are derived from `GameConstants` (see GDD §4) and are defined per tier below. |
+
+### Difficulty Rating Ranges
+
+`DifficultyRating` ranges are derived from `GameConstants` using the formula:
+
+- Minimum for a tier = `MinStatValue × StatCount` at the lowest tier
+- Each subsequent tier doubles the range
+
+| Tier | DifficultyRating Range | Derivation |
+| ---- | ---------------------- | ---------- |
+| Novice | 9–60 | `MinStatValue × StatCount` to `MaxStatValue × StatCount × 2` |
+| Apprentice | 60–120 | doubles Novice upper bound |
+| Veteran | 120–240 | doubles Apprentice upper bound |
+| Elite | 240–480 | doubles Veteran upper bound |
+| Legendary | 480–960 | doubles Elite upper bound |
+
+> `QuestFactory.cs` in `Bmd.GuildManager.Core` must use these exact ranges when generating quests. The ranges are updated as part of GM-009-01.
 
 ### Quest Generation and Availability
 
@@ -166,12 +225,12 @@ When a quest completes, the system determines the outcome.
 
 Possible results:
 
-| Outcome              | Description                          |
-| -------------------- | ------------------------------------ |
-| Success              | full loot reward, gold may be awarded |
-| Partial Success      | reduced loot, no gold bonus          |
-| Failure              | no reward                            |
-| Catastrophic Failure | no reward, characters may die        |
+| Outcome | Description |
+| -------- | ----------- |
+| CriticalSuccess | full loot reward at quest tier + chance of one item from the tier above + gold bonus; scaled by how much the team exceeded the quest difficulty |
+| Success | full loot reward, gold awarded |
+| Failure | no loot, no gold |
+| CatastrophicFailure | no reward; high character death probability |
 
 Even successful quests have a small chance of character death.
 
@@ -185,18 +244,93 @@ Character Total Power     = Base Power + Equipment Bonus
 Team Power = sum of all assigned characters' Total Power
 ```
 
-Outcome Thresholds — These are initial values and are expected to be tuned. They should be stored in Azure App Configuration (Phase 28), not hardcoded.
+### Random Variance
 
-| Team Power vs Quest Difficulty Rating | Outcome |
-| ------------------------------------- | ------- |
-| ≥ 150% | Success |
-| 100–149% | Partial Success |
+Before comparing Team Power against the quest's Difficulty Rating, a ±25% jitter is applied:
+
+```
+Effective Team Power = Team Power × Random(0.75, 1.25)
+```
+
+The team power ratio used for outcome determination is:
+
+```
+teamPowerRatio = Effective Team Power / Difficulty Rating  (expressed as a percentage)
+```
+
+### Outcome Thresholds
+
+These values are initial design decisions and are expected to be tuned. They should be stored in Azure App Configuration (Phase 28), not hardcoded.
+
+| teamPowerRatio | Outcome |
+| -------------- | ------- |
+| ≥ 150% | CriticalSuccess |
+| 100–149% | Success |
 | 60–99% | Failure |
-| < 60% | Catastrophic Failure |
+| < 60% | CatastrophicFailure |
 
-The exact numeric ranges for difficultyRating per quest tier, and the exact death probability values per outcome type, are to be finalized in the Pre-Phase Design session for Phase 9.
+### Character Death Probability
 
-The system publishes a unified **QuestResolved** event that captures the outcome type, character survival status, and resulting effects such as loot generation or gold awards.
+| Outcome | Death Probability per Character |
+| ------- | ------------------------------- |
+| CriticalSuccess | 1% |
+| Success | 2% |
+| Failure | 20% |
+| CatastrophicFailure | 60% |
+
+Death is evaluated independently per character against their Endurance stat.
+
+### XP Awarded per Character
+
+XP is awarded per character per quest resolution. CriticalSuccess XP is scaled by how much the team exceeded the difficulty.
+
+| Quest Tier | CriticalSuccess | Success | Failure | CatastrophicFailure |
+| ---------- | --------------- | ------- | ------- | ------------------- |
+| Novice | scaled (see formula) | 25 | 10 | 5 |
+| Apprentice | scaled (see formula) | 60 | 20 | 5 |
+| Veteran | scaled (see formula) | 120 | 40 | 5 |
+| Elite | scaled (see formula) | 250 | 80 | 5 |
+| Legendary | scaled (see formula) | 500 | 150 | 5 |
+
+**CriticalSuccess XP formula:**
+
+```
+overageMultiplier = teamPowerRatio / 1.0     (e.g. 123% ratio → 1.23; 234% ratio → capped at 2.0)
+xpAwarded = baseXP × jitter × min(overageMultiplier, 2.0)
+```
+
+`baseXP` is the Success XP for the quest tier. `jitter` is a small random multiplier (e.g. ×0.9–1.1) applied for variety.
+
+### Gold Awarded per Outcome
+
+Gold is only awarded for CriticalSuccess and Success outcomes. Failure and CatastrophicFailure award no gold.
+
+| Quest Tier | CriticalSuccess | Success |
+| ---------- | --------------- | ------- |
+| Novice | 30–60 | 15–30 |
+| Apprentice | 80–140 | 40–70 |
+| Veteran | 160–280 | 80–140 |
+| Elite | 350–600 | 175–300 |
+| Legendary | 700–1,200 | 350–600 |
+
+**CriticalSuccess gold formula:**
+
+```
+goldAwarded = baseGold × min(overageMultiplier, 2.0)   (then jittered within the tier's range)
+```
+
+`baseGold` is the midpoint of the Success gold range for the quest tier.
+
+### Quest Document Lifecycle
+
+After `QuestResolved` is published, the quest document is:
+
+1. Serialized to Blob Storage — container: `quest-archive`, path: `{year}/{month}/{questId}.json`
+2. Deleted from Cosmos DB
+
+This keeps the Quests container small and operational. The Blob Storage archive is the permanent record.
+
+The system publishes a unified **QuestResolved** event that captures the outcome type, character survival status, XP awarded per character, and reward flags.
 
 ### Character Death
 

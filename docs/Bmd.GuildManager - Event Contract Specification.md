@@ -259,7 +259,9 @@ Consumers:
 
 Published after the quest outcome has been fully evaluated. This is the unified resolution event that captures all possible outcomes.
 
-Outcome values: Success, PartialSuccess, Failure, CatastrophicFailure.
+Outcome values: `CriticalSuccess`, `Success`, `Failure`, `CatastrophicFailure`.
+
+> Note: `PartialSuccess` has been removed. The four-outcome model is: CriticalSuccess ≥150%, Success 100–149%, Failure 60–99%, CatastrophicFailure <60%.
 
 ```json
 {
@@ -267,18 +269,28 @@ Outcome values: Success, PartialSuccess, Failure, CatastrophicFailure.
   "data": {
     "questId": "guid",
     "playerId": "guid",
-    "outcome": "Success",
+    "questTier": "string",
+    "outcome": "CriticalSuccess",
     "characters": [
       {
         "characterId": "guid",
-        "survived": true
+        "survived": true,
+        "xpAwarded": 75
       }
     ],
-    "lootGenerated": true,
+    "lootEligible": true,
     "goldAwarded": 0
   }
 }
 ```
+
+| Field | Description |
+| ----- | ----------- |
+| `questTier` | The tier of the resolved quest: `Novice`, `Apprentice`, `Veteran`, `Elite`, or `Legendary` |
+| `outcome` | One of: `CriticalSuccess`, `Success`, `Failure`, `CatastrophicFailure` |
+| `characters[].xpAwarded` | XP awarded to this character for this quest resolution (int) |
+| `lootEligible` | `true` if this quest outcome qualifies for loot generation; the loot generator consumes this flag and creates the item |
+| `goldAwarded` | Bonus gold awarded directly by the quest outcome. Distinct from gold earned through market sales. Zero for Failure and CatastrophicFailure. |
 
 > `goldAwarded` represents a bonus gold award granted directly by the quest outcome. It is distinct from gold earned through market sales, which flows through the economy system via `ItemSold` → `GoldCredited`.
 
