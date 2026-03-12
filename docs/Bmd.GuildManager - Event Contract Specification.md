@@ -269,17 +269,15 @@ Outcome values: `CriticalSuccess`, `Success`, `Failure`, `CatastrophicFailure`.
   "data": {
     "questId": "guid",
     "playerId": "guid",
-    "questTier": "string",
-    "outcome": "CriticalSuccess",
+    "questTier": "Novice",
+    "outcome": "Success",
+    "xpAwarded": 25,
     "characters": [
-      {
-        "characterId": "guid",
-        "survived": true,
-        "xpAwarded": 75
-      }
+      { "characterId": "guid", "survived": true },
+      { "characterId": "guid", "survived": false }
     ],
     "lootEligible": true,
-    "goldAwarded": 0
+    "goldAwarded": 22
   }
 }
 ```
@@ -288,7 +286,7 @@ Outcome values: `CriticalSuccess`, `Success`, `Failure`, `CatastrophicFailure`.
 | ----- | ----------- |
 | `questTier` | The tier of the resolved quest: `Novice`, `Apprentice`, `Veteran`, `Elite`, or `Legendary` |
 | `outcome` | One of: `CriticalSuccess`, `Success`, `Failure`, `CatastrophicFailure` |
-| `characters[].xpAwarded` | XP awarded to this character for this quest resolution (int) |
+| `xpAwarded` | XP awarded to each surviving character on this quest. All survivors receive the same amount. |
 | `lootEligible` | `true` if this quest outcome qualifies for loot generation; the loot generator consumes this flag and creates the item |
 | `goldAwarded` | Bonus gold awarded directly by the quest outcome. Distinct from gold earned through market sales. Zero for Failure and CatastrophicFailure. |
 
@@ -297,7 +295,7 @@ Outcome values: `CriticalSuccess`, `Success`, `Failure`, `CatastrophicFailure`.
 Consumers:
 
 * loot generator
-* character service
+* character service — applies `xpAwarded` to each surviving character, checks level thresholds, sets survivors to `Idle`, and clears `ActiveQuestSnapshot`
 * gold service
 * notification service
 * analytics

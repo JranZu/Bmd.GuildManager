@@ -292,6 +292,8 @@ XP is awarded per character per quest resolution. CriticalSuccess XP is scaled b
 | Elite | scaled (see formula) | 250 | 80 | 5 |
 | Legendary | scaled (see formula) | 500 | 150 | 5 |
 
+> XP is a single value applied equally to all surviving characters on the quest. It is carried in `QuestResolved.xpAwarded` and applied by the character service consumer, not by the quest resolver. This keeps XP application logic centralized in the character domain and reusable for future non-quest XP sources.
+
 **CriticalSuccess XP formula:**
 
 ```
@@ -330,7 +332,7 @@ After `QuestResolved` is published, the quest document is:
 
 This keeps the Quests container small and operational. The Blob Storage archive is the permanent record.
 
-The system publishes a unified **QuestResolved** event that captures the outcome type, character survival status, XP awarded per character, and reward flags.
+`ResolveQuestFunction` publishes `QuestResolved` and archives the quest document. Character status updates (Idle for survivors, XP application, level-up check) are handled by a downstream `HandleQuestResolvedFunction` consumer. Character death is handled by Phase 10.
 
 ### Character Death
 

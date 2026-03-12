@@ -395,23 +395,24 @@ This document serves two purposes:
 - Implement `ResolveQuestFunction` triggered by the `QuestCompleted` Service Bus message
 - Calculate quest outcome using team power vs. difficulty with ±25% random variance (GDD §6)
 - Apply CriticalSuccess, Success, Failure, CatastrophicFailure outcome logic per GDD §6
-- Award XP per character per outcome and quest tier; evaluate and apply level-up if threshold crossed
+- Calculate `xpAwarded` — single value applied to all survivors
 - Evaluate character death probability per outcome type (GDD §6); publish `CharacterDied` for casualties
-- Set surviving character statuses back to `Idle` in Cosmos DB
 - Award gold per outcome and quest tier (GDD §6)
 - Create `GameConstants.cs` in `Bmd.GuildManager.Core` with `MinStatValue = 3`, `MaxStatValue = 10`, `StatCount = 3`
 - Update `QuestFactory.cs` difficulty ranges to match GDD §5 (Novice: 9–60, Apprentice: 60–120, Veteran: 120–240, Elite: 240–480, Legendary: 480–960)
-- Publish `QuestResolved` with correct outcome, `questTier`, character survival list, `xpAwarded` per character, `lootEligible`, and `goldAwarded`
+- Publish `QuestResolved` with correct outcome, `questTier`, character survival list, `xpAwarded` (top-level), `lootEligible`, and `goldAwarded`
 - After `QuestResolved` is published: serialize quest document to Blob Storage (`quest-archive/{year}/{month}/{questId}.json`) and delete it from Cosmos DB
+- Implement `HandleQuestResolvedFunction` — character consumer that applies XP, checks level thresholds, sets survivors to `Idle`, clears `ActiveQuestSnapshot`
 
 **Acceptance Criteria:**
 
 - [ ] A `QuestCompleted` message triggers resolution
 - [ ] `QuestResolved` is published with one of: `CriticalSuccess`, `Success`, `Failure`, `CatastrophicFailure`
-- [ ] `QuestResolved` includes `questTier` at top level and `xpAwarded` per character
+- [ ] `QuestResolved` includes `questTier` and `xpAwarded` at top level
 - [ ] `lootEligible` and `goldAwarded` fields in `QuestResolved` are correct for each outcome type
-- [ ] Surviving characters return to `Idle` status in Cosmos DB
-- [ ] XP is applied to each surviving character; level increases when XP threshold is crossed
+- [ ] Surviving characters each have `Xp` incremented by `xpAwarded` after `QuestResolved` is consumed
+- [ ] `HandleQuestResolvedFunction` sets all surviving characters to `Idle` and clears `ActiveQuestSnapshot`
+- [ ] If `xpAwarded` causes a character's XP to cross a level threshold, `Level` is incremented
 - [ ] CriticalSuccess outcome is covered by unit tests including boundary and cap conditions
 - [ ] Quest document is absent from Cosmos DB after resolution
 - [ ] Quest JSON is present in Blob Storage (`quest-archive/{year}/{month}/{questId}.json`) after resolution
