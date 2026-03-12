@@ -387,7 +387,7 @@ This document serves two purposes:
 - ✅ What is the character death probability per outcome type? — CriticalSuccess: 1%, Success: 2%, Failure: 20%, CatastrophicFailure: 60%. Defined in GDD §6.
 - ✅ Does XP get awarded in this phase? — Yes. XP is awarded per character per quest resolution inside `ResolveQuestFunction`. Thresholds and level-up check also happen here. See GDD §4 (XP thresholds) and GDD §6 (XP per tier/outcome).
 - ✅ What is the gold award amount per outcome type and quest tier? — Defined in GDD §6 gold table. Zero for Failure and CatastrophicFailure.
-- ✅ Does the QuestResolved event need new fields? — Yes. `questTier` (string) added at top level; `xpAwarded` (int) added per character entry in the `characters` array. `lootGenerated` renamed to `lootEligible`. Defined in ECS §4.
+- ✅ Does the QuestResolved event need new fields? — Yes. `questTier` (string) added at top level; `xpAwarded` (int) added at top level. `lootGenerated` renamed to `lootEligible`. Defined in ECS §4.
 - ✅ Should the Quest document be archived in this phase? — Yes. After `QuestResolved` is published, the quest is serialized to Blob Storage (container: `quest-archive`, path: `{year}/{month}/{questId}.json`) and deleted from Cosmos DB. Defined in GDD §6.
 
 **Work Items:**
@@ -396,7 +396,7 @@ This document serves two purposes:
 - Calculate quest outcome using team power vs. difficulty with ±25% random variance (GDD §6)
 - Apply CriticalSuccess, Success, Failure, CatastrophicFailure outcome logic per GDD §6
 - Calculate `xpAwarded` — single value applied to all survivors
-- Evaluate character death probability per outcome type (GDD §6); publish `CharacterDied` for casualties
+- Evaluate character death probability per outcome type (GDD §6); set `survived: false` on casualties in `QuestResolved`
 - Award gold per outcome and quest tier (GDD §6)
 - Create `GameConstants.cs` in `Bmd.GuildManager.Core` with `MinStatValue = 3`, `MaxStatValue = 10`, `StatCount = 3`
 - Update `QuestFactory.cs` difficulty ranges to match GDD §5 (Novice: 9–60, Apprentice: 60–120, Veteran: 120–240, Elite: 240–480, Legendary: 480–960)
