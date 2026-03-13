@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
 using Azure.Messaging.ServiceBus;
+using Azure.Storage.Blobs;
 using Bmd.GuildManager.Core.Abstractions;
+using Bmd.GuildManager.Core.Services;
 using Bmd.GuildManager.Functions.Publishers;
 using Bmd.GuildManager.Functions.Repositories;
 using Bmd.GuildManager.Functions.Serialization;
@@ -47,10 +49,24 @@ builder.Services.AddSingleton<ICharacterRepository, CosmosCharacterRepository>()
 builder.Services.AddSingleton<IQuestRepository, CosmosQuestRepository>();
 builder.Services.AddSingleton<IQuestGeneratorService, QuestGeneratorService>();
 builder.Services.AddSingleton<IMessageScheduler, ServiceBusMessageScheduler>();
+builder.Services.AddSingleton<IRandomProvider, DefaultRandomProvider>();
+builder.Services.AddSingleton<QuestResolutionService>();
 
-builder.Services.AddSingleton<IEventPublisher>(sp =>
-    new ServiceBusEventPublisher(
-        sp.GetRequiredService<ServiceBusClient>(),
-        "player-events"));
+builder.Services.AddKeyedSingleton<IEventPublisher>("player-events", (sp, _) =>
+	new ServiceBusEventPublisher(
+		sp.GetRequiredService<ServiceBusClient>(),
+		"player-events"));
+
+builder.Services.AddKeyedSingleton<IEventPublisher>("quest-events", (sp, _) =>
+	new ServiceBusEventPublisher(
+		sp.GetRequiredService<ServiceBusClient>(),
+		"quest-events"));
+
+builder.Services.AddSingleton(_ =>
+{
+	var connectionString = builder.Configuration["BlobStorageConnectionString"]
+		?? throw new InvalidOperationException("BlobStorageConnectionString is not configured.");
+	return new BlobServiceClient(connectionString);
+});
 
 builder.Build().Run();

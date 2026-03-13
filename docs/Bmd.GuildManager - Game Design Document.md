@@ -193,10 +193,10 @@ Quests are a shared world resource. A quest in Available status can be claimed b
 The quest lifecycle is:
 
 ```
-Available → InProgress → Completed → Archived (Blob Storage) → Deleted from Cosmos
+Available → InProgress → [CriticalSuccess | Success | Failure | CatastrophicFailure] → Archived (Blob Storage) → Deleted from Cosmos
 ```
 
-The Quests container is operational state only and should remain small (approximately 20–40 active documents at any time). Completed quests are archived to Blob Storage and deleted from Cosmos.
+The Quests container is operational state only and should remain small (approximately 20–40 active documents at any time). Resolved quests are archived to Blob Storage and deleted from Cosmos. The archived document carries the terminal outcome status — `CriticalSuccess`, `Success`, `Failure`, or `CatastrophicFailure` — making the Blob record self-describing without requiring a separate resolution lookup.
 
 Quest documents include an ActiveQuestSnapshot that is embedded on each assigned Character document at quest start. This snapshot contains enough information (questId, name, tier, estimatedCompletionAt) to render the character's current quest without a second lookup. It is cleared when the quest resolves.
 

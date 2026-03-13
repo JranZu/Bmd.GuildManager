@@ -1,18 +1,19 @@
-﻿using Bmd.GuildManager.Core.Abstractions;
+﻿using System.Text.Json;
+using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
 using Bmd.GuildManager.Core.Models.Requests;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace Bmd.GuildManager.Functions.Functions;
 
 public class CreatePlayerFunction(
     IPlayerRepository playerRepository,
-    IEventPublisher eventPublisher,
+	[FromKeyedServices("player-events")] IEventPublisher eventPublisher,
     ILogger<CreatePlayerFunction> logger)
 {
     private static readonly JsonSerializerOptions JsonOptions = new()

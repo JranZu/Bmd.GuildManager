@@ -4,12 +4,13 @@ using Bmd.GuildManager.Core.Data;
 using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Bmd.GuildManager.Functions.Functions;
 
 public class HandleStarterCharactersGrantedFunction(
-	IEventPublisher eventPublisher,
+	[FromKeyedServices("player-events")] IEventPublisher eventPublisher,
 	ILogger<HandleStarterCharactersGrantedFunction> logger)
 {
 	private static readonly JsonSerializerOptions JsonOptions = new()

@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Bmd.GuildManager.Core.Constants;
 
 namespace Bmd.GuildManager.Core.Models;
 
@@ -62,6 +63,21 @@ public record Character(
 			EquipmentIds:         [],
 			Xp:                   0,
 			ActiveQuestSnapshot:  null);
+	}
+
+	public Character WithXpApplied(int xpToAdd)
+	{
+		var newXp = Xp + xpToAdd;
+		var newLevel = Level;
+
+		while (newLevel < GameConstants.MaxLevel &&
+		       newLevel - 1 < GameConstants.XpThresholds.Length &&
+		       newXp >= GameConstants.XpThresholds[newLevel - 1])
+		{
+			newLevel++;
+		}
+
+		return this with { Xp = newXp, Level = newLevel };
 	}
 }
 

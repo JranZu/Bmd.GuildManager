@@ -46,7 +46,7 @@ This document serves two purposes:
 | 6 | Player Onboarding Flow | ✅ |
 | 7 | Character Domain | ✅ |
 | 8 | Quest Start | ✅  |
-| 9 | Quest Completion & Resolution | ⬜ |
+| 9 | Quest Completion & Resolution | ✅ |
 | 10 | Character Death | ⬜ |
 | 11 | Loot Generation | ⬜ |
 | 12 | Inventory Management | ⬜ |
@@ -373,7 +373,7 @@ This document serves two purposes:
 
 ### Phase 9 — Quest Completion & Resolution
 
-**Status:** ⬜
+**Status:** ✅
 
 **Goal:** Implement `ResolveQuestFunction` which consumes the scheduled `QuestCompleted` message and publishes a `QuestResolved` event capturing the full outcome.
 
@@ -406,19 +406,19 @@ This document serves two purposes:
 
 **Acceptance Criteria:**
 
-- [ ] A `QuestCompleted` message triggers resolution
-- [ ] `QuestResolved` is published with one of: `CriticalSuccess`, `Success`, `Failure`, `CatastrophicFailure`
-- [ ] `QuestResolved` includes `questTier` and `xpAwarded` at top level
-- [ ] `lootEligible` and `goldAwarded` fields in `QuestResolved` are correct for each outcome type
-- [ ] Surviving characters each have `Xp` incremented by `xpAwarded` after `QuestResolved` is consumed
-- [ ] `HandleQuestResolvedFunction` sets all surviving characters to `Idle` and clears `ActiveQuestSnapshot`
-- [ ] If `xpAwarded` causes a character's XP to cross a level threshold, `Level` is incremented
-- [ ] CriticalSuccess outcome is covered by unit tests including boundary and cap conditions
-- [ ] Quest document is absent from Cosmos DB after resolution
-- [ ] Quest JSON is present in Blob Storage (`quest-archive/{year}/{month}/{questId}.json`) after resolution
-- [ ] `lootEligible` replaces `lootGenerated` in all references (events, C# records, tests)
-- [ ] Replaying a `QuestCompleted` message does not resolve the same quest twice
-- [ ] Unit tests cover all four outcome types including boundary conditions
+- [x] A `QuestCompleted` message triggers resolution
+- [x] `QuestResolved` is published with one of: `CriticalSuccess`, `Success`, `Failure`, `CatastrophicFailure`
+- [x] `QuestResolved` includes `questTier` and `xpAwarded` at top level
+- [x] `lootEligible` and `goldAwarded` fields in `QuestResolved` are correct for each outcome type
+- [x] Surviving characters each have `Xp` incremented by `xpAwarded` after `QuestResolved` is consumed
+- [x] `HandleQuestResolvedFunction` sets all surviving characters to `Idle` and clears `ActiveQuestSnapshot`
+- [x] If `xpAwarded` causes a character's XP to cross a level threshold, `Level` is incremented
+- [x] CriticalSuccess outcome is covered by unit tests including boundary and cap conditions
+- [x] Quest document is absent from Cosmos DB after resolution
+- [x] Quest JSON is present in Blob Storage (`quest-archive/{year}/{month}/{questId}.json`) after resolution, and the archived document's `status` reflects the terminal outcome (`CriticalSuccess`, `Success`, `Failure`, or `CatastrophicFailure`) — not `InProgress` (GM-009-06)
+- [x] `lootEligible` replaces `lootGenerated` in all references (events, C# records, tests)
+- [x] Replaying a `QuestCompleted` message does not resolve the same quest twice
+- [x] Unit tests cover all four outcome types including boundary conditions
 
 ---
 

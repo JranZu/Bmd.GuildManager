@@ -44,4 +44,10 @@ public class FakeQuestRepository : IQuestRepository
             Quests[index] = quest;
         return Task.CompletedTask;
     }
+
+    public Task DeleteAsync(Guid questId)
+    {
+        Quests.RemoveAll(q => q.QuestId == questId);
+        return Task.CompletedTask;
+    }
 }

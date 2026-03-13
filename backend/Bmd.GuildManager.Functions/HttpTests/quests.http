@@ -16,9 +16,9 @@ POST {{baseUrl}}/quests?code={{functionKey}}
 Content-Type: application/json
 
 {
-  "playerId": "a2b786bc-de2d-45f2-bef4-11e0fbd3588f",
-  "questId": "79da3aaa-c095-408d-a608-1897557e99d5",
-  "characterIds": ["e8ea1496-5c50-450a-9cb5-64a7b04eb07e"]
+  "playerId": "1aacb710-24c6-41c0-bd9a-3fe8dff8f428",
+  "questId": "c3f436d6-96cc-4948-8056-56778af0f994",
+  "characterIds": ["b3f6fe0f-3d0c-412c-8aa8-fa9f1f7ed73b"]
 }
 
 ### Start Quest — quest not found (expect 409)

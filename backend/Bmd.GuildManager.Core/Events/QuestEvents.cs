@@ -19,9 +19,11 @@ public record QuestCompleted(
 public record QuestResolved(
     [property: JsonPropertyName("questId")] Guid QuestId,
     [property: JsonPropertyName("playerId")] Guid PlayerId,
+    [property: JsonPropertyName("questTier")] string QuestTier,
     [property: JsonPropertyName("outcome")] string Outcome,
+    [property: JsonPropertyName("xpAwarded")] int XpAwarded,
     [property: JsonPropertyName("characters")] IReadOnlyList<QuestResolvedCharacter> Characters,
-    [property: JsonPropertyName("lootGenerated")] bool LootGenerated,
+    [property: JsonPropertyName("lootEligible")] bool LootEligible,
     [property: JsonPropertyName("goldAwarded")] int GoldAwarded);
 
 public record QuestResolvedCharacter(

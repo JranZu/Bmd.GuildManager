@@ -2,13 +2,14 @@
 using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Events;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Bmd.GuildManager.Functions.Functions;
 
 public class OnboardPlayerFunction(
 	IPlayerRepository playerRepository,
-	IEventPublisher eventPublisher,
+	[FromKeyedServices("player-events")] IEventPublisher eventPublisher,
 	ILogger<OnboardPlayerFunction> logger)
 {
 	const int STARTING_GOLD = 500;

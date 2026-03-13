@@ -9,4 +9,5 @@ public interface IQuestRepository
     Task<IReadOnlyList<Quest>> GetAvailableQuestsAsync();
     Task<int> CountAvailableByTierAsync(string tier);
     Task UpdateAsync(Quest quest, string etag);
+    Task DeleteAsync(Guid questId);
 }

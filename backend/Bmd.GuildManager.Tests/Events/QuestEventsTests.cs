@@ -58,7 +58,15 @@ public class QuestEventsTests
             new(Guid.NewGuid(), true),
             new(Guid.NewGuid(), false)
         };
-        var payload = new QuestResolved(Guid.NewGuid(), Guid.NewGuid(), "Success", characters, true, 100);
+        var payload = new QuestResolved(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Novice",
+            "Success",
+            25,
+            characters,
+            true,
+            22);
         var envelope = EventEnvelope<QuestResolved>.Create("quest-service", Guid.NewGuid(), payload);
 
         var json = JsonSerializer.Serialize(envelope, JsonOptions);
@@ -67,9 +75,11 @@ public class QuestEventsTests
         Assert.NotNull(result);
         Assert.Equal("QuestResolved", result.EventType);
         Assert.Equal(payload.QuestId, result.Data.QuestId);
+        Assert.Equal(payload.QuestTier, result.Data.QuestTier);
         Assert.Equal(payload.Outcome, result.Data.Outcome);
+        Assert.Equal(payload.XpAwarded, result.Data.XpAwarded);
         Assert.Equal(payload.GoldAwarded, result.Data.GoldAwarded);
-        Assert.Equal(payload.LootGenerated, result.Data.LootGenerated);
+        Assert.Equal(payload.LootEligible, result.Data.LootEligible);
         Assert.Equal(2, result.Data.Characters.Count);
         Assert.Equal(characters[0].CharacterId, result.Data.Characters[0].CharacterId);
         Assert.Equal(characters[0].Survived, result.Data.Characters[0].Survived);

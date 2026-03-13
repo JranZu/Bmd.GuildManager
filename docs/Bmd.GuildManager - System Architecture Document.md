@@ -296,7 +296,7 @@ difficultyRating
 durationSeconds
 requiredAdventurers
 riskLevel (Low / Medium / High)
-status (Available / InProgress / Completed)
+status (Available / InProgress — operational; CriticalSuccess / Success / Failure / CatastrophicFailure — terminal, Blob archive only)
 playerId (nullable)
 characterIds (nullable)
 startedAt (nullable)

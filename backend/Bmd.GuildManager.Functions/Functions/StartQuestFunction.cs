@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Bmd.GuildManager.Functions.Functions;
@@ -14,7 +15,7 @@ namespace Bmd.GuildManager.Functions.Functions;
 public class StartQuestFunction(
     IQuestRepository questRepository,
     ICharacterRepository characterRepository,
-    IEventPublisher eventPublisher,
+	[FromKeyedServices("player-events")] IEventPublisher eventPublisher,
     IMessageScheduler messageScheduler,
     ILogger<StartQuestFunction> logger)
 {

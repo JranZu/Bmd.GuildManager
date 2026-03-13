@@ -78,4 +78,19 @@ public class CosmosQuestRepository(CosmosClient cosmosClient) : IQuestRepository
             new PartitionKey(quest.QuestId.ToString()),
             options);
     }
+
+    public async Task DeleteAsync(Guid questId)
+    {
+        try
+        {
+            await Container.DeleteItemAsync<Quest>(
+                questId.ToString(),
+                new PartitionKey(questId.ToString()));
+        }
+        catch (CosmosException ex)
+            when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            // Already deleted — idempotent, safe to ignore
+        }
+    }
 }

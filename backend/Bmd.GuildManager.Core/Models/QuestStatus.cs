@@ -7,5 +7,10 @@ public enum QuestStatus
 {
     Available,
     InProgress,
-    Completed
+
+    // Terminal states — only appear in Blob archive, never in Cosmos DB
+    CriticalSuccess,
+    Success,
+    Failure,
+    CatastrophicFailure
 }
