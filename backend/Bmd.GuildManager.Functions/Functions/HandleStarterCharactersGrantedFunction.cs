@@ -13,7 +13,8 @@ namespace Bmd.GuildManager.Functions.Functions;
 
 public class HandleStarterCharactersGrantedFunction(
 	[FromKeyedServices("player-events")] IEventPublisher eventPublisher,
-	ILogger<HandleStarterCharactersGrantedFunction> logger)
+	ILogger<HandleStarterCharactersGrantedFunction> logger,
+	IRandomProvider random)
 {
 	[Function("HandleStarterCharactersGranted")]
 	public async Task RunAsync(
@@ -67,9 +68,9 @@ public class HandleStarterCharactersGrantedFunction(
 				playerId: playerId,
 				name: name,
 				level: 1,
-				strength: Random.Shared.Next(GameConstants.MinStatValue, GameConstants.MaxStatValue + 1),
-				luck: Random.Shared.Next(GameConstants.MinStatValue, GameConstants.MaxStatValue + 1),
-				endurance: Random.Shared.Next(GameConstants.MinStatValue, GameConstants.MaxStatValue + 1));
+				strength: random.NextInt(GameConstants.MinStatValue, GameConstants.MaxStatValue + 1),
+				luck: random.NextInt(GameConstants.MinStatValue, GameConstants.MaxStatValue + 1),
+				endurance: random.NextInt(GameConstants.MinStatValue, GameConstants.MaxStatValue + 1));
 
 			var eventData = new CharacterCreated(
 				PlayerId: playerId,
@@ -96,14 +97,14 @@ public class HandleStarterCharactersGrantedFunction(
 		}
 	}
 
-	private static string PickUniqueName(HashSet<string> usedNames)
+	private string PickUniqueName(HashSet<string> usedNames)
 	{
 		var available = StarterCharacterNames.Pool
 			.Where(n => !usedNames.Contains(n))
 			.ToList();
 
 		var pool = available.Count > 0 ? available : [.. StarterCharacterNames.Pool];
-		var name = pool[Random.Shared.Next(pool.Count)];
+		var name = pool[random.NextInt(0, pool.Count)];
 		usedNames.Add(name);
 		return name;
 	}

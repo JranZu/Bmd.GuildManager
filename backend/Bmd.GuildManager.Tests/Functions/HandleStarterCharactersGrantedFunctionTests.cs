@@ -26,7 +26,8 @@ public class HandleStarterCharactersGrantedFunctionTests
         var publisher = new FakeEventPublisher();
         var function = new HandleStarterCharactersGrantedFunction(
             publisher,
-            NullLogger<HandleStarterCharactersGrantedFunction>.Instance);
+            NullLogger<HandleStarterCharactersGrantedFunction>.Instance,
+            new FakeRandomProvider(0.5));
 
         var playerId = Guid.NewGuid();
         var characterIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
@@ -43,7 +44,8 @@ public class HandleStarterCharactersGrantedFunctionTests
         var publisher = new FakeEventPublisher();
         var function = new HandleStarterCharactersGrantedFunction(
             publisher,
-            NullLogger<HandleStarterCharactersGrantedFunction>.Instance);
+            NullLogger<HandleStarterCharactersGrantedFunction>.Instance,
+            new FakeRandomProvider(0.5));
 
         var playerId = Guid.NewGuid();
         var characterId1 = Guid.NewGuid();
@@ -67,7 +69,8 @@ public class HandleStarterCharactersGrantedFunctionTests
         var publisher = new FakeEventPublisher();
         var function = new HandleStarterCharactersGrantedFunction(
             publisher,
-            NullLogger<HandleStarterCharactersGrantedFunction>.Instance);
+            NullLogger<HandleStarterCharactersGrantedFunction>.Instance,
+            new FakeRandomProvider(0.5));
 
         var playerId = Guid.NewGuid();
         var characterIds = new List<Guid> { Guid.NewGuid() };
@@ -85,7 +88,8 @@ public class HandleStarterCharactersGrantedFunctionTests
         var publisher = new FakeEventPublisher();
         var function = new HandleStarterCharactersGrantedFunction(
             publisher,
-            NullLogger<HandleStarterCharactersGrantedFunction>.Instance);
+            NullLogger<HandleStarterCharactersGrantedFunction>.Instance,
+            new FakeRandomProvider(0.5));
 
         var playerId = Guid.NewGuid();
         var characterIds = Enumerable.Range(0, 10)
@@ -101,9 +105,9 @@ public class HandleStarterCharactersGrantedFunctionTests
         Assert.All(characters, c =>
         {
             Assert.Equal(1, c.Level);
-            Assert.InRange(c.Strength, 3, 10);
-            Assert.InRange(c.Luck, 3, 10);
-            Assert.InRange(c.Endurance, 3, 10);
+            Assert.Equal(7, c.Strength);
+            Assert.Equal(7, c.Luck);
+            Assert.Equal(7, c.Endurance);
         });
     }
 
@@ -113,7 +117,8 @@ public class HandleStarterCharactersGrantedFunctionTests
         var publisher = new FakeEventPublisher();
         var function = new HandleStarterCharactersGrantedFunction(
             publisher,
-            NullLogger<HandleStarterCharactersGrantedFunction>.Instance);
+            NullLogger<HandleStarterCharactersGrantedFunction>.Instance,
+            new FakeRandomProvider(0.5));
 
         await function.RunAsync("this is not json");
 
@@ -126,7 +131,8 @@ public class HandleStarterCharactersGrantedFunctionTests
         var publisher = new FakeEventPublisher();
         var function = new HandleStarterCharactersGrantedFunction(
             publisher,
-            NullLogger<HandleStarterCharactersGrantedFunction>.Instance);
+            NullLogger<HandleStarterCharactersGrantedFunction>.Instance,
+            new FakeRandomProvider(0.5));
 
         await function.RunAsync(BuildMessage(Guid.NewGuid(), []));
 
