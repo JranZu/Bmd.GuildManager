@@ -159,7 +159,7 @@ This document serves two purposes:
 **Acceptance Criteria:**
 
 - [x] All resources exist and are accessible in the Azure portal
-- [x] Cosmos DB containers are created: `Players`, `Characters`, `Items`, `MarketListings`, `WorldPopulation`, `Events`, `Quests`
+- [x] Cosmos DB containers are created: `Players`, `Characters`, `MarketListings`, `WorldPopulation`, `Events`, `Quests`
 - [x] Service Bus topics/queues are created: `player-events`, `quest-events`, `loot-events`, `market-events`, `economy-events`, `population-events`, `notification-events`, `analytics-events`
 - [x] Azure API Management instance is provisioned (optional per SAD §3; provision now so Phase 29 has a target)
 - [x] Azure Functions can connect to Cosmos DB and Service Bus using managed identity or connection strings stored in Key Vault
@@ -477,22 +477,22 @@ This document serves two purposes:
 - [ ] How many items can drop per quest — always 1, or can multiple drop?
 - [ ] What word-part lists are used for procedural item name generation? (Prefix + noun, like characters? Or a different structure?)
 - [ ] Does Luck stat influence loot quality (tier/rarity) or just loot drop probability, or both?
-- [ ] The LootGenerated ECS event currently only carries itemTier and rarity — does it need stat fields added, or is that retrieved from the Items container by consumers?
+- ✅ `LootGenerated` carries the full item payload (name, tier, rarity, strengthBonus, luckBonus, enduranceBonus, basePrice). Consumers embed this directly into `Player.stash`. No secondary lookup is required or possible — the `Items` container does not exist.
+- ⚠️ The `Items` Cosmos DB container must be deleted from the Azure portal before this phase begins. It was provisioned in Phase 2 but is eliminated by the embedded item model design decision (GM-000-02). Verify deletion before any Phase 11 code is written.
+- ⚠️ If an ECS item state machine diagram exists (or is later added), it must use the embedded transfer model states (`Stashed`, `Equipping`, `Equipped`, `Unequipping`, `Selling`, `ForSale`, `Returning`) and terminal removals (`Sold`, `Discarded`, `Lost`).
 
 **Work Items:**
 
 - Implement `GenerateLootFunction` triggered by `QuestResolved` on Service Bus
 - Procedurally generate item name, tier, rarity, and stats
-- Persist item to Cosmos DB (`Items` container) with status `InInventory`
-- Publish `LootGenerated` event
+- Publish `LootGenerated` event carrying the full item payload
 
 **Acceptance Criteria:**
 
 - [ ] `QuestResolved` with `lootEligible: true` produces a `LootGenerated` event
 - [ ] `QuestResolved` with `lootEligible: false` produces no loot
-- [ ] Generated item exists in Cosmos DB with status `InInventory`
+- [ ] `LootGenerated` carries the full item payload (name, tier, rarity, strengthBonus, luckBonus, enduranceBonus, basePrice). The inventory consumer (`HandleLootGeneratedFunction`, Phase 12) handles `LootGenerated` to append the item to `Player.stash` and publishes `ItemAddedToInventory` as confirmation.
 - [ ] Item tier and rarity values are valid per GDD §7
-- [ ] `LootGenerated` is followed by `ItemAddedToInventory` (see Phase 12)
 - [ ] Unit tests cover procedural generation logic
 
 ---
@@ -501,32 +501,37 @@ This document serves two purposes:
 
 **Status:** ⬜
 
-**Goal:** Implement inventory persistence and the `ItemAddedToInventory` event so items are tracked per player and can be retrieved.
+**Goal:** Implement `HandleLootGeneratedFunction` which consumes `LootGenerated` from Service Bus, appends the item to `Player.stash`, and publishes `ItemAddedToInventory`. Implement `GET /api/players/{playerId}/inventory` returning the player's stash. Implement item discard removing the item from the stash array.
 
-**Reference:** ECS §5 (`ItemAddedToInventory`), SAD §4 (Items-backed inventory data model), GDD §7 (Loot System)
+**Reference:** ECS §5 (`ItemAddedToInventory`), SAD §4 (embedded item data model), GDD §7 (Loot System)
 
 **Pre-Phase Design**
 > ⚠️ Questions must be answered in a design conversation and reflected in the GDD/SAD before Work Items begin. Do not start implementation until all items are marked ✅.
 
-- [ ] Confirm: The Inventory Cosmos DB container is eliminated. Items container with /ownerId partition key is the inventory. All references to the Inventory container in the roadmap and codebase must be cleaned up before this phase starts.
-- [ ] The HandleStarterItemsGrantedFunction is currently a stub (publishes GUIDs, no item records created). Does real starter item creation happen in this phase? If so, what tier and stats do starter items have?
-- [ ] Is there a maximum inventory size? If yes, what happens when a player tries to exceed it — reject the loot drop, or auto-discard the oldest item?
-- [ ] Should GET /api/players/{playerId}/inventory return items grouped by status (InInventory vs Equipped vs ListedForSale), or a flat list filtered to non-terminal statuses?
+- [ ] What is the maximum stash size? (Proposed: 50) What happens when loot drops and the stash is full — reject the drop silently, reject with event, or auto-discard the oldest item?
+- [ ] Does `GET /api/players/{playerId}/inventory` return only `Stashed` items, or also items in transitional states (`Equipping`, `Selling`)?
+- [ ] Does `HandleLootGeneratedFunction` need to be idempotent on `eventId`? (Yes — if Service Bus redelivers, appending twice would duplicate the item. Confirm the dedup strategy.)
+- [ ] The `StarterItemsGranted` stub currently publishes two random GUIDs with no corresponding handler. Does real starter item creation happen in this phase? If so, what tier, rarity, and stats do starter items have?
 
 **Work Items:**
 
-- Implement a handler for `LootGenerated` that publishes `ItemAddedToInventory` and updates the `Items` container in Cosmos DB (inventory is item status-driven)
-- Implement `GET /api/players/{playerId}/inventory` HTTP endpoint
-- Implement `DELETE /api/players/{playerId}/inventory/{itemId}` (discard) publishing `ItemDiscarded` and setting item state to `Discarded`
+- Implement `HandleLootGeneratedFunction` as a Service Bus consumer on `loot-events`
+- Validate stash is not at capacity before appending
+- Append item from `LootGenerated` payload to `Player.stash` using optimistic concurrency (ETag)
+- Publish `ItemAddedToInventory` on success
+- Implement `GET /api/players/{playerId}/inventory` returning the stash array from the Player document
+- Implement `DELETE /api/players/{playerId}/inventory/{itemId}` (discard) removing the item from the stash array and publishing `ItemDiscarded`
 
 **Acceptance Criteria:**
 
-- [ ] `LootGenerated` results in an `ItemAddedToInventory` event and a Cosmos DB inventory record
-- [ ] `GET /api/players/{playerId}/inventory` returns the correct item list
-- [ ] Discarding an item publishes `ItemDiscarded` and sets item state to `Discarded` (terminal)
-- [ ] Discarding an `Equipped` or `ListedForSale` item returns HTTP 409
-- [ ] Discarding a `Discarded`, `Sold`, or `Lost` item returns HTTP 409
-- [ ] Unit tests cover all item state transition validations
+- [ ] `LootGenerated` results in the item being present in `Player.stash` with status `Stashed`
+- [ ] `ItemAddedToInventory` is published after successful stash write
+- [ ] Receiving a duplicate `LootGenerated` (same `eventId`) does not add the item twice
+- [ ] `GET /api/players/{playerId}/inventory` returns the correct stash contents
+- [ ] Discarding a `Stashed` item removes it from the array and publishes `ItemDiscarded`
+- [ ] Discarding an item in a transitional or non-stash state returns HTTP 409
+- [ ] Loot drop when stash is at capacity is handled per the pre-phase design decision
+- [ ] Unit tests cover stash append, capacity check, and discard state validation
 
 ---
 
@@ -551,16 +556,19 @@ This document serves two purposes:
 
 - Implement `POST /api/players/{playerId}/characters/{characterId}/equip` publishing `ItemEquipped`
 - Implement `POST /api/players/{playerId}/characters/{characterId}/unequip` publishing `ItemUnequipped`
-- Update item state to `Equipped` / `InInventory` accordingly in Cosmos DB using optimistic concurrency
+- Set item status to `Equipping` on `Player.stash` and set `transferTargetId` to the target `characterId` (commit point)
+- Publish `ItemEquipped` event
+- Consumer appends item to `Character.equipment` (idempotent; if already present, treat as success)
+- Consumer removes item from `Player.stash`
+- For unequip, mirror the above in reverse using `Unequipping` status and targeting `Player.stash`
 
 **Acceptance Criteria:**
 
-- [ ] Equipping an `InInventory` item on an `Idle` character succeeds and sets item state to `Equipped`
+- [ ] Equipping a `Stashed` item on an `Idle` character sets item status to `Equipping` on the player document, then `Equipped` on the character document, then removes it from the stash
+- [ ] Receiving a duplicate `ItemEquipped` event (same `eventId`) does not add the item to the character twice
+- [ ] Unequipping an `Equipped` item returns it to `Player.stash` with status `Stashed`
 - [ ] Equipping an item on an `OnQuest` character returns HTTP 409
-- [ ] Equipping an already `Equipped` or `ListedForSale` item returns HTTP 409
-- [ ] Unequipping an `Equipped` item returns it to `InInventory`
-- [ ] `ItemEquipped` and `ItemUnequipped` events are published with correct fields
-- [ ] Concurrent equip requests for the same item resolve correctly via ETag
+- [ ] An item already in a transitional state cannot be acted on (HTTP 409)
 - [ ] Unit and integration tests pass
 
 ---
@@ -651,21 +659,23 @@ This document serves two purposes:
 - [ ] Is there a listing fee, or is listing free?
 - [ ] Is there a maximum number of concurrent active listings per player?
 - [ ] What is the listing duration — how long does a listing stay active before it expires unsold?
-- [ ] When a listing expires unsold, does the item return to InInventory automatically, or does the player have to claim it?
-- [ ] Should the ItemListed event include the item tier and basePrice (it currently does per ECS §6) — confirm these fields will be available on the Item document at listing time
+- [ ] When a listing expires unsold, does the item return to stash automatically, or does the player have to claim it?
+- ✅ `ItemListed` carries the full item payload. Item data is read from `Player.stash` at listing time and embedded in both the event and the `MarketListings` document.
 
 **Work Items:**
 
-- Implement `POST /api/players/{playerId}/market/list` publishing `ItemListed` and setting item state to `ListedForSale`
-- Implement `DELETE /api/players/{playerId}/market/{listingId}` publishing `ItemListingCanceled` and returning item to `InInventory`
-- Persist listing to `MarketListings` container
+- Set item status to `Selling` on `Player.stash` with `transferTargetId` set to the new `listingId`
+- Publish `ItemListed` event carrying the full item payload
+- Consumer creates `MarketListings` document with item embedded (idempotent on `listingId`)
+- Consumer removes item from `Player.stash`
+- Implement `DELETE /api/players/{playerId}/market/{listingId}` publishing `ItemListingCanceled`
 
 **Acceptance Criteria:**
 
-- [ ] Listing an `InInventory` item sets its state to `ListedForSale` and creates a `MarketListings` record
-- [ ] `ItemListed` event is published with correct fields
+- [ ] Listing a `Stashed` item sets its status to `Selling`, creates a `MarketListings` document with the item embedded, then removes it from `Player.stash`
+- [ ] `ItemListed` event includes the full item payload (not just `itemId`)
 - [ ] Listing an `Equipped` item returns HTTP 409
-- [ ] Canceling an active listing returns the item to `InInventory` and publishes `ItemListingCanceled`
+- [ ] Canceling an active listing sets the listing item status to `Returning`, then appends the item to `Player.stash` with status `Stashed`, then deletes the listing
 - [ ] Canceling an already-sold or non-existent listing returns HTTP 409 / 404
 - [ ] Unit and integration tests pass
 
@@ -692,7 +702,7 @@ This document serves two purposes:
 
 - Implement `MarketPricingFunction` triggered by `ItemListed` to calculate demand-adjusted price and schedule a potential sale
 - Implement `MarketSaleFunction` triggered by the scheduled sale message
-- Publish `ItemSold` and transition item to `Sold` (terminal state)
+- Publish `ItemSold` and remove the embedded sold item from `MarketListings`
 - Trigger `GoldCredited` for the seller
 
 **Acceptance Criteria:**
@@ -700,7 +710,7 @@ This document serves two purposes:
 - [ ] `ItemListed` triggers price calculation using `basePrice × demand ÷ supply` (GDD §8)
 - [ ] A sale is scheduled via Service Bus delayed message
 - [ ] `ItemSold` event is published with correct `listingId`, `finalPrice`, and `buyerTier`
-- [ ] Item state transitions to `Sold` in Cosmos DB
+- [ ] Sold item data is removed from `MarketListings` as a terminal transition
 - [ ] `GoldCredited` is published for the seller with `reason: "ItemSold"`
 - [ ] A canceled listing does not trigger a sale
 - [ ] A listing cannot be sold more than once
@@ -898,7 +908,7 @@ This document serves two purposes:
 > ⚠️ Questions must be answered in a design conversation and reflected in the GDD/SAD before Work Items begin. Do not start implementation until all items are marked ✅.
 
 - [ ] The Characters panel shows equipped items per character — does this require a separate GET /api/items/{itemId} call per item, or does GET /api/players/{playerId}/characters return embedded item data?
-- [ ] How is character tier displayed — is it a computed field returned by the API, or calculated client-side from equipmentIds?
+- [ ] How is character tier displayed — is it a computed field returned by the API, or calculated client-side from embedded equipment stats?
 - [ ] Should the Characters panel show XP and progress toward next level?
 - [ ] How are dead characters handled in the UI — hidden, grayed out, or shown in a separate fallen section?
 
@@ -963,7 +973,7 @@ This document serves two purposes:
 **Pre-Phase Design**
 > ⚠️ Questions must be answered in a design conversation and reflected in the GDD/SAD before Work Items begin. Do not start implementation until all items are marked ✅.
 
-- [ ] Does this panel call GET /api/players/{playerId}/inventory (which queries the Items container by ownerId), or a different endpoint?
+- [ ] Does this panel call GET /api/players/{playerId}/inventory (which returns `Player.stash` directly from the Player document), or a different endpoint?
 - [ ] How is the character tier rating visually represented — a label, a star rating, a progress bar?
 - [ ] Is the market listing UI in this panel or a separate panel? (Current roadmap says Guild Management panel includes market — confirm)
 - [ ] Does the world news feed have a max visible entries limit in the UI, or infinite scroll?
@@ -977,7 +987,7 @@ This document serves two purposes:
 
 **Acceptance Criteria:**
 
-- [ ] Inventory displays all `InInventory` items with correct metadata
+- [ ] Inventory displays all `Stashed` items with correct metadata
 - [ ] List, discard, and equip actions call the correct APIs and update the UI
 - [ ] Active market listings display with cancel option
 - [ ] Gold balance updates in real time when `GoldCredited` or `GoldDebited` arrives

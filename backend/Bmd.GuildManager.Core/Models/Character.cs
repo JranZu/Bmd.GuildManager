@@ -13,7 +13,7 @@ public record Character(
 	[property: JsonPropertyName("luck")]                  int Luck,
 	[property: JsonPropertyName("endurance")]             int Endurance,
 	[property: JsonPropertyName("status")]                CharacterStatus Status,
-	[property: JsonPropertyName("equipmentIds")]          IReadOnlyList<Guid> EquipmentIds,
+	[property: JsonPropertyName("equipment")]             IReadOnlyList<Item> Equipment,
 	[property: JsonPropertyName("xp")]                   int Xp,
 	[property: JsonPropertyName("activeQuestSnapshot")]  ActiveQuestSnapshot? ActiveQuestSnapshot)
 {
@@ -36,7 +36,7 @@ public record Character(
 			Luck:                 luck,
 			Endurance:            endurance,
 			Status:               CharacterStatus.Idle,
-			EquipmentIds:         [],
+			Equipment:            [],
 			Xp:                   0,
 			ActiveQuestSnapshot:  null);
 	}
@@ -60,7 +60,7 @@ public record Character(
 			Luck:                 luck,
 			Endurance:            endurance,
 			Status:               CharacterStatus.Idle,
-			EquipmentIds:         [],
+			Equipment:            [],
 			Xp:                   0,
 			ActiveQuestSnapshot:  null);
 	}

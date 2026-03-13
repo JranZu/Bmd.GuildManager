@@ -141,7 +141,7 @@ A Level 20 character who retires grants a permanent +1 bonus to their highest st
 
 Additional character properties:
 
-* EquipmentIds — list of item IDs currently equipped, one per filled slot
+* Equipment — list of equipped Item objects, one per filled slot
 * Xp — accumulated experience points
 * Level — current numeric level derived from XP thresholds above
 * Current status: Idle / OnQuest / Dead
@@ -362,9 +362,7 @@ Each item contains:
 | LuckBonus | Integer bonus to character Luck when equipped. 0 if not a luck item. |
 | EnduranceBonus | Integer bonus to character Endurance when equipped. 0 if not an endurance item. |
 | BasePrice | Base gold value used in the market pricing formula. Defined per tier and rarity. Exact values to be defined in Phase 11 pre-phase design. |
-| Status | InInventory / Equipped / ListedForSale / Sold / Discarded / Lost |
-| OwnerId | PlayerId of the current owner |
-| CharacterId | CharacterId of the character currently equipped to (null if not equipped) |
+| Status | Stashed / Equipping / Equipped / Unequipping / Selling / ForSale / Returning / Sold / Discarded / Lost |
 
 ### Item Drop Tier Rules
 

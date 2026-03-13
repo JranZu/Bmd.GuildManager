@@ -40,7 +40,7 @@ public class HandleCharacterCreatedFunctionTests
         Assert.Equal("Aldric", character.Name);
         Assert.Equal(1, character.Level);
         Assert.Equal(CharacterStatus.Idle, character.Status);
-        Assert.Empty(character.EquipmentIds);
+        Assert.Empty(character.Equipment);
     }
 
     [Fact]

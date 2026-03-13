@@ -3,11 +3,16 @@
 namespace Bmd.GuildManager.Core.Events;
 
 public record LootGenerated(
-    [property: JsonPropertyName("itemId")] Guid ItemId,
-    [property: JsonPropertyName("playerId")] Guid PlayerId,
-    [property: JsonPropertyName("questId")] Guid QuestId,
-    [property: JsonPropertyName("itemTier")] string ItemTier,
-    [property: JsonPropertyName("rarity")] string Rarity);
+    [property: JsonPropertyName("itemId")]         Guid ItemId,
+    [property: JsonPropertyName("playerId")]       Guid PlayerId,
+    [property: JsonPropertyName("questId")]        Guid QuestId,
+    [property: JsonPropertyName("name")]           string Name,
+    [property: JsonPropertyName("tier")]           string Tier,
+    [property: JsonPropertyName("rarity")]         string Rarity,
+    [property: JsonPropertyName("strengthBonus")]  int StrengthBonus,
+    [property: JsonPropertyName("luckBonus")]      int LuckBonus,
+    [property: JsonPropertyName("enduranceBonus")] int EnduranceBonus,
+    [property: JsonPropertyName("basePrice")]      int BasePrice);
 
 public record ItemAddedToInventory(
     [property: JsonPropertyName("itemId")] Guid ItemId,

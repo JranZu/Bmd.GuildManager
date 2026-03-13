@@ -13,7 +13,18 @@ public class LootEventsTests
     [Fact]
     public void LootGenerated_RoundTrip()
     {
-        var payload = new LootGenerated(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Veteran", "Rare");
+        var payload = new LootGenerated(
+            ItemId:         Guid.NewGuid(),
+            PlayerId:       Guid.NewGuid(),
+            QuestId:        Guid.NewGuid(),
+            Name:           "Shadow Blade",
+            Tier:           "Veteran",
+            Rarity:         "Rare",
+            StrengthBonus:  12,
+            LuckBonus:      0,
+            EnduranceBonus: 5,
+            BasePrice:      300);
+
         var envelope = EventEnvelope<LootGenerated>.Create("loot-service", Guid.NewGuid(), payload);
 
         var json = JsonSerializer.Serialize(envelope, JsonOptions);

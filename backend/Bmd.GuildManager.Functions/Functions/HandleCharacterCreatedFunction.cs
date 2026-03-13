@@ -69,7 +69,7 @@ public class HandleCharacterCreatedFunction(
 			Luck:                data.Luck,
 			Endurance:           data.Endurance,
 			Status:              CharacterStatus.Idle,
-			EquipmentIds:        [],
+			Equipment:           [],
 			Xp:                  0,
 			ActiveQuestSnapshot: null);
 

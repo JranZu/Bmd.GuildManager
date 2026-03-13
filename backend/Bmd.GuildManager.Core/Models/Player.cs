@@ -3,12 +3,13 @@
 namespace Bmd.GuildManager.Core.Models;
 
 public record Player(
-	[property: JsonPropertyName("id")]              string Id,
-	[property: JsonPropertyName("playerId")]        Guid PlayerId,
-	[property: JsonPropertyName("guildName")]       string GuildName,
-	[property: JsonPropertyName("gold")]            int Gold,
-	[property: JsonPropertyName("createdDate")]     DateTime CreatedDate,
-	[property: JsonPropertyName("idempotencyKey")]  string? IdempotencyKey)
+	[property: JsonPropertyName("id")]             string Id,
+	[property: JsonPropertyName("playerId")]       Guid PlayerId,
+	[property: JsonPropertyName("guildName")]      string GuildName,
+	[property: JsonPropertyName("gold")]           int Gold,
+	[property: JsonPropertyName("createdDate")]    DateTime CreatedDate,
+	[property: JsonPropertyName("idempotencyKey")] string? IdempotencyKey,
+	[property: JsonPropertyName("stash")]          IReadOnlyList<Item> Stash)
 {
 	public static Player Create(string guildName, string? idempotencyKey = null)
 	{
@@ -19,6 +20,7 @@ public record Player(
 			GuildName:      guildName,
 			Gold:           0,
 			CreatedDate:    DateTime.UtcNow,
-			IdempotencyKey: idempotencyKey);
+			IdempotencyKey: idempotencyKey,
+			Stash:          []);
 	}
 }

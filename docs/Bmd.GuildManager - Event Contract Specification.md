@@ -315,8 +315,13 @@ Published when loot is created.
     "itemId": "guid",
     "playerId": "guid",
     "questId": "guid",
-    "itemTier": "Veteran",
-    "rarity": "Rare"
+    "name": "Shadow Blade",
+    "tier": "Veteran",
+    "rarity": "Rare",
+    "strengthBonus": 12,
+    "luckBonus": 0,
+    "enduranceBonus": 5,
+    "basePrice": 300
   }
 }
 ```
@@ -420,8 +425,13 @@ Published when an item is placed on the market.
     "listingId": "guid",
     "itemId": "guid",
     "playerId": "guid",
-    "itemTier": "Beginner",
-    "basePrice": 100
+    "name": "Shadow Blade",
+    "tier": "Veteran",
+    "rarity": "Rare",
+    "strengthBonus": 12,
+    "luckBonus": 0,
+    "enduranceBonus": 5,
+    "basePrice": 300
   }
 }
 ```
@@ -652,8 +662,9 @@ Character rules:
 
 Item rules:
 
-* An item cannot be equipped and listed for sale at the same time.
-* An equipped item must be unequipped before it can be discarded or sold.
+* An item in `Equipped` state cannot be sold or discarded.
+* An item in `ForSale` state cannot be equipped or discarded.
+* Items in transitional states cannot be acted on until the transfer completes.
 
 Market rules:
 
@@ -678,34 +689,66 @@ if conflict → retry or reject
 
 ## Item State Machine
 
-Items follow a defined set of states throughout their lifecycle.
+Items are embedded in owner documents. Location is state: an item is `Stashed` because it exists in `Player.stash`, `Equipped` because it exists in `Character.equipment`, and `ForSale` because it exists in a `MarketListings` document.
+
+Stable and transitional states:
+
+| State | Description |
+| --- | --- |
+| `Stashed` | Item is in the player's guild stash (`Player.stash` array) |
+| `Equipping` | Transfer initiated — item is being moved from stash to a character |
+| `Equipped` | Item is embedded on a `Character` document |
+| `Unequipping` | Transfer initiated — item is being moved from a character back to stash |
+| `Selling` | Transfer initiated — item is being moved from stash to a market listing |
+| `ForSale` | Item is embedded in a `MarketListings` document |
+| `Returning` | Transfer initiated — listing was canceled, item returning to stash |
+
+Terminal states (removed from the operational store):
+
+| State | Trigger |
+| --- | --- |
+| `Sold` | Market sale completed — item removed from `MarketListings` |
+| `Discarded` | Player discarded the item from stash |
+| `Lost` | Character died — item removed from `Character` document |
+
+Transition rules:
 
 ```
-InInventory → Equipped
-InInventory → ListedForSale
-InInventory → Discarded
-Equipped → InInventory (via unequip)
-ListedForSale → InInventory (via cancel listing)
-ListedForSale → Sold
-Equipped → Lost (via character death)
+Stashed     → Equipping   (player initiates equip)
+Equipping   → Equipped    (consumer writes to Character, deletes from Player.stash)
+Equipping   → Stashed     (rollback: transfer failed after sweeper timeout)
+
+Equipped    → Unequipping (player initiates unequip)
+Unequipping → Stashed     (consumer writes to Player.stash, deletes from Character)
+Unequipping → Equipped    (rollback: transfer failed after sweeper timeout)
+
+Stashed     → Selling     (player initiates market listing)
+Selling     → ForSale     (consumer writes to MarketListings, deletes from Player.stash)
+Selling     → Stashed     (rollback: transfer failed after sweeper timeout)
+
+ForSale     → Returning   (player cancels listing)
+Returning   → Stashed     (consumer writes to Player.stash, deletes from MarketListings)
+ForSale     → Sold        (market sale completes — terminal)
+
+Equipped    → Lost        (character death — terminal)
+Stashed     → Discarded   (player discards — terminal)
 ```
 
-Valid states:
+Transfer metadata fields:
 
-| State         | Description                              |
-| ------------- | ---------------------------------------- |
-| InInventory   | item is in the player's inventory        |
-| Equipped      | item is equipped to a character          |
-| ListedForSale | item is listed on the market             |
-| Sold          | item has been sold (terminal state)      |
-| Discarded     | item has been permanently removed        |
-| Lost          | item was lost due to character death     |
+* `transferTargetId` — destination `characterId`, `listingId`, or `playerId` for an in-flight transfer. `null` when not transferring.
+* `transferStartedAt` — UTC timestamp set when a transitional state starts.
 
-State transition rules:
+Sweeper rule:
 
-* An item in `Equipped` state cannot be listed, sold, or discarded.
-* An item in `ListedForSale` state cannot be equipped or discarded.
-* `Sold`, `Discarded`, and `Lost` are terminal states.
+Any item in `Equipping`, `Unequipping`, `Selling`, or `Returning` with `transferStartedAt` older than 60 seconds is eligible for reconciliation:
+
+* If the item exists at the target document, delete it from the source.
+* If the item does not exist at the target, retry transfer or roll back to the previous stable state after N retries.
+
+Consumer idempotency rule:
+
+Transfer consumers must check the target document before writing. If the item already exists at the target, treat it as success and proceed to delete from the source. This ensures at-least-once Service Bus delivery does not produce duplicate items.
 
 ---
 
@@ -736,5 +779,3 @@ This communicates that the event describes something that already happened.
 
 > **Payload Type Naming**
 > Payload types in `Bmd.GuildManager.Core` must be named exactly as their `eventType` string. The `EventEnvelope<T>` factory derives `eventType` from `typeof(T).Name` — a mismatch between the type name and the ECS string will produce an incorrect value on the wire.
-
----

@@ -376,8 +376,8 @@ B[ResolveQuestFunction]
 
 C{Outcome?}
 
-D[Success]
-E[Partial Success]
+D[CriticalSuccess]
+E[Success]
 F[Failure]
 G[Catastrophic Failure]
 

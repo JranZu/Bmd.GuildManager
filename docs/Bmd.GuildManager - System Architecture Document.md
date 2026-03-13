@@ -168,14 +168,13 @@ Suggested containers:
 ```
 Players
 Characters
-Items
 MarketListings
 WorldPopulation
 Events
 Quests
 ```
 
-The Inventory container has been removed. The Items container now serves as both the item master record and inventory source. Inventory is read by filtering Items with ownerId equal to playerId and a non-terminal status. This removes duplicate state and avoids cross-container synchronization on item state changes.
+Items are not stored in a standalone `Items` container. Item data is embedded within the owning document (`Player.stash`, `Character.equipment`, or `MarketListings.item`).
 
 Cosmos DB advantages:
 
@@ -236,7 +235,10 @@ PlayerId
 GuildName
 Gold
 CreatedDate
+stash  (array of StashedItem, max 50)
 ```
+
+`stash` is bounded to a maximum of 50 items. Loot drops that would exceed this limit are rejected with an event or HTTP error (final behavior is defined in Phase 11 pre-phase design).
 
 ---
 
@@ -253,7 +255,7 @@ strength
 luck
 endurance
 status (Idle / OnQuest / Dead)
-equipmentIds
+equipment  (array of equipped Item — max entries equals number of equipment slots)
 activeQuestSnapshot (nullable)
   questId
   name
@@ -263,10 +265,11 @@ activeQuestSnapshot (nullable)
 
 ---
 
-### Item
+Items are not stored as independent documents. They are embedded as objects within the document of whichever entity currently owns them — the `Player` stash array, the `Character` equipment array, or the `MarketListings` document. This aligns storage with read patterns (an item is always read in the context of its owner) and eliminates the Cosmos DB partition key immutability problem that would arise when ownership changes.
+
+### Stashed Items / Equipped Items (same shape, different context)
 
 ```
-id
 itemId
 name
 tier (Novice / Apprentice / Veteran / Elite / Legendary)
@@ -275,12 +278,12 @@ strengthBonus
 luckBonus
 enduranceBonus
 basePrice
-status (InInventory / Equipped / ListedForSale / Sold / Discarded / Lost)
-ownerId
-characterId (nullable)
+status (Stashed / Equipping / Equipped / Unequipping / Selling / ForSale / Returning)
+transferTargetId  (nullable)
+transferStartedAt (nullable)
 ```
 
-Partition key: /ownerId (supports efficient per-player inventory and character item queries)
+Terminal states (`Sold`, `Discarded`, `Lost`) remove the item from the operational document entirely.
 
 ---
 
@@ -311,27 +314,11 @@ Partition key: /questId (self-partitioned; container is small and bounded)
 
 ```
 ListingId
-ItemId
 SellerId
 Price
 Tier
 CreatedDate
-```
-
----
-
-### World Population
-
-Single global record.
-
-```
-NovicePopulation
-ApprenticePopulation
-VeteranPopulation
-ElitePopulation
-LegendaryPopulation
-PopulationUpdateScheduled
-LastUpdated
+item  (embedded StashedItem object — full item data copied at listing time)
 ```
 
 ---
