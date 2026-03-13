@@ -1032,6 +1032,8 @@ This document serves two purposes:
 - [ ] What is the max delivery count before a message is dead-lettered? (Azure Service Bus default is 10 — confirm this is appropriate)
 - [ ] Is there a monitoring alert for dead letter queue depth? (Related to Phase 26 — confirm coordination between these phases)
 - [ ] Are there any functions that do not yet implement eventId idempotency checks? (Audit required — list all consumers and confirm each one has idempotency logic)
+- [ ] Quests that are InProgress but past their estimatedCompletionAt with no resolution are permanently stuck — characters assigned to them cannot be reassigned and the quest never resolves. A watchdog/sweeper pattern is required. Should this be a timer-triggered Azure Function that queries Cosmos DB for stuck quests and reschedules a QuestCompleted message, or a different recovery mechanism? (Identified during Phase 9 Azure deployment — GM-009 post-deploy incident)
+- [ ] What is the stuck quest detection window — how many minutes past estimatedCompletionAt before a quest is considered stuck and eligible for recovery? (Must be long enough to avoid false positives from normal processing delays, short enough that players aren't waiting indefinitely)
 
 **Work Items:**
 
@@ -1040,6 +1042,8 @@ This document serves two purposes:
 - Verify retry policies are set appropriately on all consumers
 - Write integration tests that replay duplicate events and assert no double-processing
 - Write integration tests that simulate ETag conflicts and assert correct retry/reject behavior
+- Implement a `QuestWatchdogFunction` timer-triggered function that queries the Quests container for documents where `status = InProgress` and `estimatedCompletionAt` is older than the configured detection window, and reschedules a `QuestCompleted` Service Bus message for each
+- Verify the watchdog is idempotent — rescheduling a message for a quest that is already being resolved must not cause double-resolution
 
 **Acceptance Criteria:**
 
@@ -1048,6 +1052,8 @@ This document serves two purposes:
 - [ ] Failed messages after max retries land in the dead letter queue
 - [ ] ETag conflicts on Cosmos DB writes are detected and handled correctly
 - [ ] All domain invariants (ECS §11 concurrency rules) are enforced and covered by tests
+- [ ] A quest stuck in InProgress past its estimatedCompletionAt is automatically recovered by the watchdog within one timer interval
+- [ ] The watchdog does not double-resolve a quest that resolves normally between watchdog runs
 
 ---
 

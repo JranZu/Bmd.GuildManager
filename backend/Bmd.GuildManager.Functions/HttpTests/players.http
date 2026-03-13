@@ -44,4 +44,4 @@ Idempotency-Key: 11111111-1111-1111-1111-111111111111
 GET {{baseUrl}}/players/{{createPlayerHappyPath.response.body.$.playerId}}/characters?code={{functionKey}}
 
 ### Get Characters — unknown playerId (expect empty array)
-GET {{baseUrl}}/players/00000000-0000-0000-0000-000000000000/characters?code={{functionKey}}
+GET {{baseUrl}}/players/3bcf2f8d-a7d1-4ee6-aa4a-c20312fe2630/characters?code={{functionKey}}

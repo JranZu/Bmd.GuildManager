@@ -1,10 +1,6 @@
 ﻿### Get Available Quests — happy path
 GET {{baseUrl}}/quests/available?code={{functionKey}}
 
-### Get Available Quests — expect empty array on fresh environment
-# Run this before the generator has fired to confirm 200 + []
-GET {{baseUrl}}/quests/available?code={{functionKey}}
-
 ### Start Quest — happy path
 # Prerequisites:
 #   1. Run createPlayerHappyPath from players.http to get a playerId
@@ -16,9 +12,9 @@ POST {{baseUrl}}/quests?code={{functionKey}}
 Content-Type: application/json
 
 {
-  "playerId": "1aacb710-24c6-41c0-bd9a-3fe8dff8f428",
-  "questId": "c3f436d6-96cc-4948-8056-56778af0f994",
-  "characterIds": ["b3f6fe0f-3d0c-412c-8aa8-fa9f1f7ed73b"]
+  "playerId": "5a361abf-7713-4914-af00-7d50febb89cf",
+  "questId": "6a03da37-1387-4a76-960b-e596f5c5ee4e",
+  "characterIds": ["28fe33cc-c7dc-416e-8eea-82370c229939"]
 }
 
 ### Start Quest — quest not found (expect 409)
