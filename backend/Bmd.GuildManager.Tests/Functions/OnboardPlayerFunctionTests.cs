@@ -1,4 +1,5 @@
 ﻿using Bmd.GuildManager.Core.Abstractions;
+using Bmd.GuildManager.Core.Constants;
 using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
 using Bmd.GuildManager.Functions.Functions;
@@ -40,6 +41,14 @@ public class OnboardPlayerFunctionTests
 		Assert.Equal("GuildCreated", publisher.Published[0].EventType);
 		Assert.Equal("StarterCharactersGranted", publisher.Published[1].EventType);
 		Assert.Equal("StarterItemsGranted", publisher.Published[2].EventType);
+
+		var charactersEvent = (StarterCharactersGranted)publisher.Published[1].Data;
+		Assert.Equal(GameConstants.StarterCharacterCount, charactersEvent.CharacterIds.Count);
+		Assert.All(charactersEvent.CharacterIds, id => Assert.NotEqual(Guid.Empty, id));
+
+		var itemsEvent = (StarterItemsGranted)publisher.Published[2].Data;
+		Assert.Equal(GameConstants.StarterItemCount, itemsEvent.ItemIds.Count);
+		Assert.All(itemsEvent.ItemIds, id => Assert.NotEqual(Guid.Empty, id));
 	}
 
 	[Fact]

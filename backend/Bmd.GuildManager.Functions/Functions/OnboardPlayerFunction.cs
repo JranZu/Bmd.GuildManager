@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Bmd.GuildManager.Core.Abstractions;
+using Bmd.GuildManager.Core.Constants;
 using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Functions.Serialization;
 using Microsoft.Azure.Cosmos;
@@ -94,7 +95,10 @@ public class OnboardPlayerFunction(
 
 		logger.LogInformation("GuildCreated event published for player {PlayerId}", playerId);
 
-		var starterCharactersGranted = new StarterCharactersGranted(playerId, [Guid.NewGuid(), Guid.NewGuid()]);
+		var characterIds = Enumerable.Range(0, GameConstants.StarterCharacterCount)
+			.Select(_ => Guid.NewGuid())
+			.ToList();
+		var starterCharactersGranted = new StarterCharactersGranted(playerId, characterIds);
 		var starterCharactersEnvelope = EventEnvelope<StarterCharactersGranted>.Create(
 			source: "OnboardPlayerFunction",
 			correlationId: playerId,
@@ -104,7 +108,10 @@ public class OnboardPlayerFunction(
 
 		logger.LogInformation("StarterCharactersGranted event published for player {PlayerId}", playerId);
 
-		var starterItemsGranted = new StarterItemsGranted(playerId, [Guid.NewGuid(), Guid.NewGuid()]);
+		var itemIds = Enumerable.Range(0, GameConstants.StarterItemCount)
+			.Select(_ => Guid.NewGuid())
+			.ToList();
+		var starterItemsGranted = new StarterItemsGranted(playerId, itemIds);
 		var starterItemsEnvelope = EventEnvelope<StarterItemsGranted>.Create(
 			source: "OnboardPlayerFunction",
 			correlationId: playerId,

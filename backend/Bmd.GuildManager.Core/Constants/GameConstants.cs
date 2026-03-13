@@ -2,6 +2,10 @@
 
 public static class GameConstants
 {
+	// Starter roster sizes (GDD §2 — Onboarding)
+	public const int StarterCharacterCount = 2;
+	public const int StarterItemCount = 2;
+
 	// Stat generation — used to derive quest difficulty ranges (GDD §5)
 	public const int MinStatValue = 3;
 	public const int MaxStatValue = 10;
