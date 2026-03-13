@@ -36,13 +36,11 @@ public class QuestResolutionService(IRandomProvider random)
     // --- Team power ---
 
     /// <summary>
-    /// Calculates aggregate team power from base stats plus a level bonus.
-    /// Equipment bonus is deferred to Phase 13.
-    /// </summary>
+    /// Calculates aggregate team power by summing each character's TotalPower
+	/// /// </summary>
     public static int CalculateTeamPower(IReadOnlyList<Character> characters)
     {
-        return characters.Sum(c =>
-            c.Strength + c.Luck + c.Endurance + (c.Level * 2));
+        return characters.Sum(c => c.TotalPower);
     }
 
     // --- Death rolls ---
@@ -70,7 +68,7 @@ public class QuestResolutionService(IRandomProvider random)
     /// Calculates XP awarded per character. CriticalSuccess scales by overage
     /// (capped at 2×) and applies a ±10% jitter.
     /// </summary>
-    public int CalculateXpAwarded(QuestStatus outcome, string questTier, double teamPowerRatio)
+    public int CalculateXpAwarded(QuestStatus outcome, DifficultyTier questTier, double teamPowerRatio)
     {
         var baseXp = GetBaseXp(questTier, outcome);
 
@@ -82,29 +80,29 @@ public class QuestResolutionService(IRandomProvider random)
         return (int)Math.Round(baseXp * overageMultiplier * jitter);
     }
 
-    private static int GetBaseXp(string questTier, QuestStatus outcome) =>
+    private static int GetBaseXp(DifficultyTier questTier, QuestStatus outcome) =>
         (questTier, outcome) switch
         {
-            ("Novice",     QuestStatus.CriticalSuccess) => 25,
-            ("Novice",     QuestStatus.Success)         => 25,
-            ("Novice",     QuestStatus.Failure)         => 10,
-            ("Novice",     _)                           => 5,
-            ("Apprentice", QuestStatus.CriticalSuccess) => 60,
-            ("Apprentice", QuestStatus.Success)         => 60,
-            ("Apprentice", QuestStatus.Failure)         => 20,
-            ("Apprentice", _)                           => 5,
-            ("Veteran",    QuestStatus.CriticalSuccess) => 120,
-            ("Veteran",    QuestStatus.Success)         => 120,
-            ("Veteran",    QuestStatus.Failure)         => 40,
-            ("Veteran",    _)                           => 5,
-            ("Elite",      QuestStatus.CriticalSuccess) => 250,
-            ("Elite",      QuestStatus.Success)         => 250,
-            ("Elite",      QuestStatus.Failure)         => 80,
-            ("Elite",      _)                           => 5,
-            ("Legendary",  QuestStatus.CriticalSuccess) => 500,
-            ("Legendary",  QuestStatus.Success)         => 500,
-            ("Legendary",  QuestStatus.Failure)         => 150,
-            ("Legendary",  _)                           => 5,
+            (DifficultyTier.Novice,      QuestStatus.CriticalSuccess) => 25,
+            (DifficultyTier.Novice,      QuestStatus.Success)         => 25,
+            (DifficultyTier.Novice,      QuestStatus.Failure)         => 10,
+            (DifficultyTier.Novice,      _)                           => 5,
+            (DifficultyTier.Apprentice,  QuestStatus.CriticalSuccess) => 60,
+            (DifficultyTier.Apprentice,  QuestStatus.Success)         => 60,
+            (DifficultyTier.Apprentice,  QuestStatus.Failure)         => 20,
+            (DifficultyTier.Apprentice,  _)                           => 5,
+            (DifficultyTier.Veteran,     QuestStatus.CriticalSuccess) => 120,
+            (DifficultyTier.Veteran,     QuestStatus.Success)         => 120,
+            (DifficultyTier.Veteran,     QuestStatus.Failure)         => 40,
+            (DifficultyTier.Veteran,     _)                           => 5,
+            (DifficultyTier.Elite,       QuestStatus.CriticalSuccess) => 250,
+            (DifficultyTier.Elite,       QuestStatus.Success)         => 250,
+            (DifficultyTier.Elite,       QuestStatus.Failure)         => 80,
+            (DifficultyTier.Elite,       _)                           => 5,
+            (DifficultyTier.Legendary,   QuestStatus.CriticalSuccess) => 500,
+            (DifficultyTier.Legendary,   QuestStatus.Success)         => 500,
+            (DifficultyTier.Legendary,   QuestStatus.Failure)         => 150,
+            (DifficultyTier.Legendary,   _)                           => 5,
             _ => throw new ArgumentOutOfRangeException(nameof(questTier), questTier, null)
         };
 
@@ -114,7 +112,7 @@ public class QuestResolutionService(IRandomProvider random)
     /// Calculates gold awarded. Failure/CatastrophicFailure yield zero.
     /// Success/CriticalSuccess roll within a tier-based range.
     /// </summary>
-    public int CalculateGoldAwarded(QuestStatus outcome, string questTier, double teamPowerRatio)
+    public int CalculateGoldAwarded(QuestStatus outcome, DifficultyTier questTier, double teamPowerRatio)
     {
         if (outcome is QuestStatus.Failure or QuestStatus.CatastrophicFailure)
             return 0;
@@ -123,19 +121,19 @@ public class QuestResolutionService(IRandomProvider random)
         return random.NextInt(minGold, maxGold + 1);
     }
 
-    private static (int Min, int Max) GetGoldRange(string questTier, QuestStatus outcome) =>
+    private static (int Min, int Max) GetGoldRange(DifficultyTier questTier, QuestStatus outcome) =>
         (questTier, outcome) switch
         {
-            ("Novice",     QuestStatus.CriticalSuccess) => (30,  60),
-            ("Novice",     QuestStatus.Success)         => (15,  30),
-            ("Apprentice", QuestStatus.CriticalSuccess) => (80,  140),
-            ("Apprentice", QuestStatus.Success)         => (40,  70),
-            ("Veteran",    QuestStatus.CriticalSuccess) => (160, 280),
-            ("Veteran",    QuestStatus.Success)         => (80,  140),
-            ("Elite",      QuestStatus.CriticalSuccess) => (350, 600),
-            ("Elite",      QuestStatus.Success)         => (175, 300),
-            ("Legendary",  QuestStatus.CriticalSuccess) => (700, 1_200),
-            ("Legendary",  QuestStatus.Success)         => (350, 600),
+            (DifficultyTier.Novice,      QuestStatus.CriticalSuccess) => (30,  60),
+            (DifficultyTier.Novice,      QuestStatus.Success)         => (15,  30),
+            (DifficultyTier.Apprentice,  QuestStatus.CriticalSuccess) => (80,  140),
+            (DifficultyTier.Apprentice,  QuestStatus.Success)         => (40,  70),
+            (DifficultyTier.Veteran,     QuestStatus.CriticalSuccess) => (160, 280),
+            (DifficultyTier.Veteran,     QuestStatus.Success)         => (80,  140),
+            (DifficultyTier.Elite,       QuestStatus.CriticalSuccess) => (350, 600),
+            (DifficultyTier.Elite,       QuestStatus.Success)         => (175, 300),
+            (DifficultyTier.Legendary,   QuestStatus.CriticalSuccess) => (700, 1_200),
+            (DifficultyTier.Legendary,   QuestStatus.Success)         => (350, 600),
             _ => throw new ArgumentOutOfRangeException(nameof(questTier), questTier, null)
         };
 

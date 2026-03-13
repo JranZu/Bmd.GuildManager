@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Bmd.GuildManager.Core.Events;
+using Bmd.GuildManager.Core.Models;
 
 namespace Bmd.GuildManager.Tests.Events;
 
@@ -18,7 +19,7 @@ public class QuestEventsTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Combat",
-            "Rare",
+            DifficultyTier.Elite,
             [Guid.NewGuid(), Guid.NewGuid()],
             300,
             estimatedCompletionAt);
@@ -61,7 +62,7 @@ public class QuestEventsTests
         var payload = new QuestResolved(
             Guid.NewGuid(),
             Guid.NewGuid(),
-            "Novice",
+            DifficultyTier.Novice,
             "Success",
             25,
             characters,

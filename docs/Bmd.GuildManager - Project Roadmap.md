@@ -346,6 +346,7 @@ This document serves two purposes:
 - ✅ The Quests Cosmos DB container must be provisioned (container: Quests, partition key: /questId) — not yet created
 - ✅ The Inventory Cosmos DB container should be deleted or confirmed unused — it was provisioned in Phase 2 but eliminated by design decision
 - [x] How many equipment slots does a character have and what are they named? (Required to define ActiveQuestSnapshot and character power calculation)
+  - ✅ 7 slots: MainHand, Offhand, Chest, Head, Feet, Ring, Accessory — see GDD §4
 - [x] Does the player select a quest from an available board, or specify quest parameters? This determines the POST /api/quests request shape
 - [x] Is GET /api/quests/available (the quest board endpoint) implemented in this phase or a separate one?
 - [x] Is the quest generator function (timer-triggered, ensures minimum 2 available quests per tier) in scope for this phase or added as a new phase between 7 and 8?
@@ -426,31 +427,31 @@ This document serves two purposes:
 
 **Status:** ⬜
 
-**Goal:** Implement character death handling triggered by `QuestResolved`. Dead characters are permanently removed from active use and their equipped items are marked as lost.
+**Goal:** Implement character death handling triggered by `QuestResolved`. Dead characters are set to `Dead` status and retained in Cosmos DB (soft-delete). Equipped items remain on the dead character document and cannot be retrieved — no item status update is required.
 
-**Reference:** ECS §3 (`CharacterDied`), GDD §6 (Character Death), ECS §11 (Item State Machine — `Lost` state)
+**Reference:** ECS §3 (`CharacterDied`), GDD §6 (Character Death)
 
 **Pre-Phase Design**
 > ⚠️ Questions must be answered in a design conversation and reflected in the GDD/SAD before Work Items begin. Do not start implementation until all items are marked ✅.
 
-- [ ] Does the CharacterDied event need to include the character tier? (Phase 20 WorldNewsFunction references character tier in news messages — if tier is not in the event, WorldNewsFunction must query for it separately)
-- [ ] When a character dies, are all equipped items always Lost, or is there a chance of item recovery (e.g. Endurance stat influences recovery chance)?
-- [ ] Is character death evaluated per-character or for the whole party? (Can some characters die while others survive in the same Failure outcome?)
-- [ ] Should dead characters be soft-deleted (status = Dead, kept in Cosmos) or hard-deleted? The current roadmap says status = Dead and kept — confirm this is still the intent.
+- ✅ `CharacterDied` must include `characterTier` (string). `WorldNewsFunction` (Phase 20) uses it directly to generate tier-appropriate news messages without a secondary character lookup.
+- ✅ All equipped items are conceptually lost when a character dies. No item status update is required — items remain `Equipped` on the dead character document and cannot be retrieved. This is correct for the embedded item model (no separate Items container).
+- ✅ Death is evaluated per-character independently. Multiple characters can survive while others die in the same quest outcome.
+- ✅ Confirmed soft-delete. Dead characters are marked `Dead` and retained in Cosmos DB. They cannot be assigned to quests.
 
 **Work Items:**
 
-- Within `ResolveQuestFunction` (or a downstream consumer), publish `CharacterDied` for each character that did not survive
-- Implement a handler that sets character status to `Dead` in Cosmos DB
-- Mark all items equipped by the dead character as `Lost` (terminal state)
+- Within `ResolveQuestFunction` (or a downstream consumer), publish `CharacterDied` for each character that did not survive, including their `characterTier`
+- Implement `HandleCharacterDiedFunction` — sets character status to `Dead` in Cosmos DB
 
 **Acceptance Criteria:**
 
-- [ ] `CharacterDied` is published for every character that dies in a `CatastrophicFailure` (or probabilistic death in other outcomes per GDD §6)
+- [ ] `CharacterDied` is published for every character that dies (probabilistic death per GDD §6 across all outcome types)
+- [ ] `CharacterDied` includes `characterTier` matching the character's derived tier at time of death
 - [ ] Dead characters have status `Dead` in Cosmos DB and cannot be assigned to future quests
-- [ ] Items equipped to dead characters transition to `Lost` state in Cosmos DB
-- [ ] `Lost` items cannot be equipped, sold, or discarded
-- [ ] Unit tests cover death state transitions and item loss
+- [ ] Dead characters remain in Cosmos DB (soft-delete); they are not hard-deleted
+- [ ] Equipped items on dead characters retain `Equipped` status — no item update is performed
+- [ ] Unit tests cover death state transitions
 
 ---
 
@@ -547,8 +548,10 @@ This document serves two purposes:
 > ⚠️ Questions must be answered in a design conversation and reflected in the GDD/SAD before Work Items begin. Do not start implementation until all items are marked ✅.
 
 - [ ] How many equipment slots does a character have and what are they named? (This must be decided before this phase — same question as Phase 8, must be resolved there first)
+  - ✅ 7 slots: MainHand, Offhand, Chest, Head, Feet, Ring, Accessory — see GDD §4
 - [ ] Is there a slot-type constraint — can only certain item types go in certain slots, or can any item go in any slot?
 - [ ] What is the maximum number of items a character can have equipped? (Equals number of slots)
+  - ✅ 7 (one per slot)
 - [ ] When an item is equipped/unequipped, does the API response include the character's recalculated tier and effective stats, or does the client calculate that itself?
 - [ ] Does equipping/unequipping an item during an active quest need to be blocked? (Current rule: OnQuest characters cannot have equipment changes — confirm)
 

@@ -1,4 +1,6 @@
-﻿namespace Bmd.GuildManager.Core.Services;
+﻿using Bmd.GuildManager.Core.Models;
+
+namespace Bmd.GuildManager.Core.Services;
 
 internal static class QuestWordPools
 {
@@ -142,14 +144,14 @@ internal static class QuestWordPools
 
     // --- Lookup helpers ---
 
-    internal static string[] LocationsForTier(string tier) => tier switch
+    internal static string[] LocationsForTier(DifficultyTier tier) => tier switch
     {
-        "Novice" => LocationsNovice,
-        "Apprentice" => LocationsApprentice,
-        "Veteran" => LocationsVeteran,
-        "Elite" => LocationsElite,
-        "Legendary" => LocationsLegendary,
-        _ => LocationsNovice
+        DifficultyTier.Novice      => LocationsNovice,
+        DifficultyTier.Apprentice  => LocationsApprentice,
+        DifficultyTier.Veteran     => LocationsVeteran,
+        DifficultyTier.Elite       => LocationsElite,
+        DifficultyTier.Legendary   => LocationsLegendary,
+        _ => throw new ArgumentOutOfRangeException(nameof(tier), tier, null)
     };
 
     internal static string[] AdjectivesForRisk(string riskLevel) => riskLevel switch
@@ -160,23 +162,23 @@ internal static class QuestWordPools
         _ => AdjectivesLow
     };
 
-    internal static string[] CreaturesForTier(string tier) => tier switch
+    internal static string[] CreaturesForTier(DifficultyTier tier) => tier switch
     {
-        "Novice" => CreaturesNovice,
-        "Apprentice" => CreaturesApprentice,
-        "Veteran" => CreaturesVeteran,
-        "Elite" => CreaturesElite,
-        "Legendary" => CreaturesLegendary,
-        _ => CreaturesNovice
+        DifficultyTier.Novice      => CreaturesNovice,
+        DifficultyTier.Apprentice  => CreaturesApprentice,
+        DifficultyTier.Veteran     => CreaturesVeteran,
+        DifficultyTier.Elite       => CreaturesElite,
+        DifficultyTier.Legendary   => CreaturesLegendary,
+        _ => throw new ArgumentOutOfRangeException(nameof(tier), tier, null)
     };
 
-    internal static string[] MaterialsForTier(string tier) => tier switch
+    internal static string[] MaterialsForTier(DifficultyTier tier) => tier switch
     {
-        "Novice" => MaterialsNovice,
-        "Apprentice" => MaterialsApprentice,
-        "Veteran" => MaterialsVeteran,
-        "Elite" => MaterialsElite,
-        "Legendary" => MaterialsLegendary,
-        _ => MaterialsNovice
+        DifficultyTier.Novice      => MaterialsNovice,
+        DifficultyTier.Apprentice  => MaterialsApprentice,
+        DifficultyTier.Veteran     => MaterialsVeteran,
+        DifficultyTier.Elite       => MaterialsElite,
+        DifficultyTier.Legendary   => MaterialsLegendary,
+        _ => throw new ArgumentOutOfRangeException(nameof(tier), tier, null)
     };
 }

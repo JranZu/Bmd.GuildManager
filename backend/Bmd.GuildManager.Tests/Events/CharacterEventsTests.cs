@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Bmd.GuildManager.Core.Events;
+using Bmd.GuildManager.Core.Models;
 
 namespace Bmd.GuildManager.Tests.Events;
 
@@ -27,7 +28,7 @@ public class CharacterEventsTests
     [Fact]
     public void CharacterDied_RoundTrip()
     {
-        var payload = new CharacterDied(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var payload = new CharacterDied(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), DifficultyTier.Veteran);
         var envelope = EventEnvelope<CharacterDied>.Create("character-service", Guid.NewGuid(), payload);
 
         var json = JsonSerializer.Serialize(envelope, JsonOptions);
@@ -35,6 +36,9 @@ public class CharacterEventsTests
 
         Assert.NotNull(result);
         Assert.Equal("CharacterDied", result.EventType);
-        Assert.Equal(payload, result.Data);
+        Assert.Equal(payload.CharacterId,   result.Data.CharacterId);
+        Assert.Equal(payload.PlayerId,      result.Data.PlayerId);
+        Assert.Equal(payload.QuestId,       result.Data.QuestId);
+        Assert.Equal(payload.CharacterTier, result.Data.CharacterTier);
     }
 }

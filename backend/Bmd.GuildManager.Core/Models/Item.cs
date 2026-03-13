@@ -5,7 +5,7 @@ namespace Bmd.GuildManager.Core.Models;
 public record Item(
 	[property: JsonPropertyName("itemId")]            Guid ItemId,
 	[property: JsonPropertyName("name")]              string Name,
-	[property: JsonPropertyName("tier")]              string Tier,
+	[property: JsonPropertyName("tier")]              DifficultyTier Tier,
 	[property: JsonPropertyName("rarity")]            string Rarity,
 	[property: JsonPropertyName("strengthBonus")]     int StrengthBonus,
 	[property: JsonPropertyName("luckBonus")]         int LuckBonus,

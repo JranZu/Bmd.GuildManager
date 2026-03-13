@@ -2,18 +2,33 @@
 
 public static class GameConstants
 {
-    // Stat generation — used to derive quest difficulty ranges (GDD §5)
-    public const int MinStatValue = 3;
-    public const int MaxStatValue = 10;
-    public const int StatCount = 3;
+	// Stat generation — used to derive quest difficulty ranges (GDD §5)
+	public const int MinStatValue = 3;
+	public const int MaxStatValue = 10;
+	public const int StatCount = 3;
 
-    public const int MaxLevel = 20;
+	public const int MaxLevel = 20;
 
-    // XP required to advance from Level N to Level N+1.
-    // Index 0 = Level 1 → 2. Index 18 = Level 19 → 20.
-    public static readonly int[] XpThresholds =
-    [
-        100,        // 1 → 2
+	// Equipment — 7 named slots: MainHand, Offhand, Chest, Head, Feet, Ring, Accessory (GDD §4)
+	public const int EquipmentSlotCount = 7;
+
+	// Minimum TotalPower to enter each tier above Novice (GDD §4, §6).
+	// Each threshold doubles, matching the quest difficulty doubling pattern (QuestFactory).
+	// A fully-equipped max-stat Legendary character is expected to reach ≈ 320 (2× entry threshold).
+	public static readonly int[] TierTotalPowerThresholds =
+	[
+			// Novice (<20)
+		20, // Apprentice (≥20)
+		40, // Veteran (≥40)
+		80, // Elite (≥80),
+		160 // Legendary (≥160)
+	];
+
+	// XP required to advance from Level N to Level N+1.
+	// Index 0 = Level 1 → 2. Index 18 = Level 19 → 20.
+	public static readonly int[] XpThresholds =
+	[
+		100,        // 1 → 2
         250,        // 2 → 3
         500,        // 3 → 4
         1_000,      // 4 → 5
@@ -34,21 +49,21 @@ public static class GameConstants
         32_768_000  // 19 → 20
     ];
 
-    // Outcome thresholds — teamPowerRatio = effectiveTeamPower / difficultyRating (GDD §6)
-    public const double CriticalSuccessThreshold = 1.50;
-    public const double SuccessThreshold = 1.00;
-    public const double FailureThreshold = 0.60;
+	// Outcome thresholds — teamPowerRatio = effectiveTeamPower / difficultyRating (GDD §6)
+	public const double CriticalSuccessThreshold = 1.50;
+	public const double SuccessThreshold = 1.00;
+	public const double FailureThreshold = 0.60;
 
-    // Death probability per outcome per character (GDD §6)
-    public const double DeathProbabilityCriticalSuccess = 0.01;
-    public const double DeathProbabilitySuccess = 0.02;
-    public const double DeathProbabilityFailure = 0.20;
-    public const double DeathProbabilityCatastrophicFailure = 0.60;
+	// Death probability per outcome per character (GDD §6)
+	public const double DeathProbabilityCriticalSuccess = 0.01;
+	public const double DeathProbabilitySuccess = 0.02;
+	public const double DeathProbabilityFailure = 0.20;
+	public const double DeathProbabilityCatastrophicFailure = 0.60;
 
-    // CriticalSuccess XP/gold overage multiplier cap (GDD §6)
-    public const double OverageMultiplierCap = 2.0;
+	// CriticalSuccess XP/gold overage multiplier cap (GDD §6)
+	public const double OverageMultiplierCap = 2.0;
 
-    // CriticalSuccess XP jitter range
-    public const double XpJitterMin = 0.9;
-    public const double XpJitterMax = 1.1;
+	// CriticalSuccess XP jitter range
+	public const double XpJitterMin = 0.9;
+	public const double XpJitterMax = 1.1;
 }

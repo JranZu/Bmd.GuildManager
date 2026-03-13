@@ -71,13 +71,38 @@ public record Character(
 		var newLevel = Level;
 
 		while (newLevel < GameConstants.MaxLevel &&
-		       newLevel - 1 < GameConstants.XpThresholds.Length &&
-		       newXp >= GameConstants.XpThresholds[newLevel - 1])
+			   newLevel - 1 < GameConstants.XpThresholds.Length &&
+			   newXp >= GameConstants.XpThresholds[newLevel - 1])
 		{
 			newLevel++;
 		}
 
 		return this with { Xp = newXp, Level = newLevel };
+	}
+
+	/// <summary>
+	/// Base combat contribution of this character from stats and level alone, before equipment bonuses (GDD §6).
+	/// </summary>
+	public int BasePower => Strength + Luck + Endurance + (Level * 2);
+
+	/// <summary>
+	/// Total combat power of this character, including all equipped item stat bonuses (GDD §6).
+	/// </summary>
+	public int TotalPower => BasePower + Equipment.Sum(item => item.StrengthBonus + item.LuckBonus + item.EnduranceBonus);
+
+	/// <summary>
+	/// Derives the character's tier by comparing TotalPower against exponential thresholds (GDD §4, §6).
+	/// Each threshold doubles from the previous, mirroring the quest difficulty doubling pattern.
+	/// </summary>
+	public DifficultyTier CalculateTier()
+	{
+		var thresholds = GameConstants.TierTotalPowerThresholds;
+		for (var i = thresholds.Length - 1; i >= 0; i--)
+		{
+			if (TotalPower >= thresholds[i])
+				return (DifficultyTier)(i + 2);
+		}
+		return DifficultyTier.Novice;
 	}
 }
 
@@ -85,5 +110,5 @@ public record ActiveQuestSnapshot(
 	[property: JsonPropertyName("questId")]               Guid QuestId,
 	[property: JsonPropertyName("name")]                  string Name,
 	[property: JsonPropertyName("description")]           string Description,
-	[property: JsonPropertyName("tier")]                  string Tier,
+	[property: JsonPropertyName("tier")]                  DifficultyTier Tier,
 	[property: JsonPropertyName("estimatedCompletionAt")] DateTimeOffset EstimatedCompletionAt);

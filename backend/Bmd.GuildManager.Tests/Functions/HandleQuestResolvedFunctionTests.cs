@@ -18,7 +18,7 @@ public class HandleQuestResolvedFunctionTests
         {
             Status = CharacterStatus.OnQuest,
             ActiveQuestSnapshot = new ActiveQuestSnapshot(
-                questId, "Test Quest", "A quest.", "Novice",
+                questId, "Test Quest", "A quest.", DifficultyTier.Novice,
                 DateTimeOffset.UtcNow.AddMinutes(5))
         };
 
@@ -29,7 +29,7 @@ public class HandleQuestResolvedFunctionTests
         int xpAwarded = 25)
     {
         var payload = new QuestResolved(
-            questId, playerId, "Novice", "Success",
+            questId, playerId, DifficultyTier.Novice, "Success",
             xpAwarded, characters, true, 20);
         var envelope = EventEnvelope<QuestResolved>.Create(
             "test", Guid.NewGuid(), payload);
@@ -92,7 +92,7 @@ public class HandleQuestResolvedFunctionTests
         var function = new HandleQuestResolvedFunction(
             repo, NullLogger<HandleQuestResolvedFunction>.Instance);
 
-        // 90 + 25 = 115, crosses the 100 threshold → Level 2
+        // 90 + 25 = 115, crosses the 100 threshold ? Level 2
         await function.RunAsync(BuildMessage(questId, playerId,
             [new QuestResolvedCharacter(character.CharacterId, Survived: true)],
             xpAwarded: 25));

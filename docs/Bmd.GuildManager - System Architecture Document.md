@@ -255,7 +255,8 @@ strength
 luck
 endurance
 status (Idle / OnQuest / Dead)
-equipment  (array of equipped Item — max entries equals number of equipment slots)
+equipment  (array of equipped Item — max 7 entries, one per slot)
+           (slots: MainHand, Offhand, Chest, Head, Feet, Ring, Accessory)
 activeQuestSnapshot (nullable)
   questId
   name

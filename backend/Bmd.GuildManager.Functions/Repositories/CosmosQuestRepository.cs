@@ -53,12 +53,12 @@ public class CosmosQuestRepository(CosmosClient cosmosClient) : IQuestRepository
         return results.AsReadOnly();
     }
 
-    public async Task<int> CountAvailableByTierAsync(string tier)
+    public async Task<int> CountAvailableByTierAsync(DifficultyTier tier)
     {
         var query = new QueryDefinition(
             "SELECT VALUE COUNT(1) FROM c WHERE c.status = @status AND c.tier = @tier")
             .WithParameter("@status", nameof(QuestStatus.Available))
-            .WithParameter("@tier", tier);
+            .WithParameter("@tier", tier.ToString());
 
         var iterator = Container.GetItemQueryIterator<int>(query);
         var result = await iterator.ReadNextAsync();

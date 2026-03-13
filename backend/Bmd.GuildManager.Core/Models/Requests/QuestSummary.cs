@@ -7,7 +7,7 @@ public record QuestSummary(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("description")] string Description,
     [property: JsonPropertyName("questType")] string QuestType,
-    [property: JsonPropertyName("tier")] string Tier,
+    [property: JsonPropertyName("tier")] DifficultyTier Tier,
     [property: JsonPropertyName("riskLevel")] string RiskLevel,
     [property: JsonPropertyName("difficultyRating")] int DifficultyRating,
     [property: JsonPropertyName("requiredAdventurers")] int RequiredAdventurers,

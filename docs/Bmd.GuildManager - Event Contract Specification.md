@@ -191,14 +191,18 @@ Published when a character dies during a quest.
   "data": {
     "characterId": "guid",
     "playerId": "guid",
-    "questId": "guid"
+    "questId": "guid",
+    "characterTier": "Novice"
   }
 }
 ```
 
+| Field | Description |
+| ----- | ----------- |
+| `characterTier` | The character's derived tier at the time of death: `Novice`, `Apprentice`, `Veteran`, `Elite`, or `Legendary`. Carried in the event so downstream consumers (e.g. `WorldNewsFunction`) do not need a secondary character lookup. |
+
 Consumers:
 
-* inventory cleanup
 * notification service
 * analytics
 * world news system
@@ -218,11 +222,13 @@ Published when a player sends characters on a quest.
     "questId": "guid",
     "playerId": "guid",
     "questType": "GoblinCave",
-    "characters": [
+    "questTier": "Novice",
+    "characterIds": [
       "characterId1",
       "characterId2"
     ],
-    "durationSeconds": 120
+    "durationSeconds": 120,
+    "estimatedCompletionAt": "utc datetime"
   }
 }
 ```
@@ -582,10 +588,11 @@ Published after population adjustment.
 {
   "eventType": "PopulationUpdated",
   "data": {
-    "beginner": 1020,
-    "veteran": 198,
-    "elite": 49,
-    "epic": 9
+    "novice": 1000,
+    "apprentice": 500,
+    "veteran": 200,
+    "elite": 50,
+    "legendary": 10
   }
 }
 ```

@@ -20,7 +20,7 @@ public class StartQuestFunctionTests
 
     private static Quest BuildAvailableQuest(
         int requiredAdventurers = 1,
-        string tier = "Novice")
+        DifficultyTier tier = DifficultyTier.Novice)
     {
         var questId = Guid.NewGuid();
         return new Quest(

@@ -29,8 +29,8 @@ public class QuestResolutionServiceTests
     [Fact]
     public void DetermineOutcome_AppliesJitter_CanLowerOutcome()
     {
-        // teamPower=100, difficulty=100 → base ratio=1.0 (Success boundary)
-        // jitter=0.75 → effectivePower=75 → ratio=0.75 → Failure
+        // teamPower=100, difficulty=100 ? base ratio=1.0 (Success boundary)
+        // jitter=0.75 ? effectivePower=75 ? ratio=0.75 ? Failure
         var service = new QuestResolutionService(new FakeRandomProvider(0.0)); // 0.0 maps to 0.75 min
         var outcome = service.DetermineOutcome(teamPower: 100, difficultyRating: 100);
         Assert.Equal(QuestStatus.Failure, outcome);
@@ -39,8 +39,8 @@ public class QuestResolutionServiceTests
     [Fact]
     public void DetermineOutcome_AppliesJitter_CanRaiseOutcome()
     {
-        // teamPower=100, difficulty=100 → base ratio=1.0
-        // jitter=1.25 → effectivePower=125 → ratio=1.25 → Success (not CriticalSuccess)
+        // teamPower=100, difficulty=100 ? base ratio=1.0
+        // jitter=1.25 ? effectivePower=125 ? ratio=1.25 ? Success (not CriticalSuccess)
         var service = new QuestResolutionService(new FakeRandomProvider(1.0)); // 1.0 maps to 1.25 max
         var outcome = service.DetermineOutcome(teamPower: 100, difficultyRating: 100);
         Assert.Equal(QuestStatus.Success, outcome);
@@ -59,17 +59,42 @@ public class QuestResolutionServiceTests
                 strength: 4, luck: 4, endurance: 4)
         };
 
-        // Alpha: 5+5+5+(1×2) = 17
-        // Beta:  4+4+4+(3×2) = 18
+        // Alpha: TotalPower = 5+5+5+(1x2)+0 = 17
+        // Beta:  TotalPower = 4+4+4+(3x2)+0 = 18
         // Total: 35
         Assert.Equal(35, QuestResolutionService.CalculateTeamPower(characters));
+    }
+
+    [Fact]
+    public void CalculateTeamPower_IncludesEquipmentStatBonuses()
+    {
+        static Item MakeItem(int str, int lck, int end) =>
+            new(Guid.NewGuid(), "Item", DifficultyTier.Novice, "Common",
+                StrengthBonus: str, LuckBonus: lck, EnduranceBonus: end,
+                BasePrice: 10, Status: ItemStatus.Equipped,
+                TransferTargetId: null, TransferStartedAt: null);
+
+        var characters = new List<Character>
+        {
+            Character.Create(Guid.NewGuid(), "Alpha", level: 1,
+                strength: 5, luck: 5, endurance: 5)
+                with { Equipment = [MakeItem(2, 1, 0)] },  // +3 bonus
+            Character.Create(Guid.NewGuid(), "Beta", level: 3,
+                strength: 4, luck: 4, endurance: 4)
+                with { Equipment = [MakeItem(0, 0, 4)] }   // +4 bonus
+        };
+
+        // Alpha: BasePower=17, equipment bonus=3 → TotalPower=20
+        // Beta:  BasePower=18, equipment bonus=4 → TotalPower=22
+        // Total: 42
+        Assert.Equal(42, QuestResolutionService.CalculateTeamPower(characters));
     }
 
     // --- RollDeath ---
 
     [Theory]
-    [InlineData(QuestStatus.CriticalSuccess,     0.009, true)]   // just below 1% threshold → dies
-    [InlineData(QuestStatus.CriticalSuccess,     0.011, false)]  // just above → survives
+    [InlineData(QuestStatus.CriticalSuccess,     0.009, true)]   // just below 1% threshold ? dies
+    [InlineData(QuestStatus.CriticalSuccess,     0.011, false)]  // just above ? survives
     [InlineData(QuestStatus.Success,             0.019, true)]
     [InlineData(QuestStatus.Success,             0.021, false)]
     [InlineData(QuestStatus.Failure,             0.199, true)]
@@ -86,19 +111,19 @@ public class QuestResolutionServiceTests
     // --- CalculateXpAwarded ---
 
     [Theory]
-    [InlineData("Novice",     QuestStatus.Success,            25)]
-    [InlineData("Novice",     QuestStatus.Failure,            10)]
-    [InlineData("Novice",     QuestStatus.CatastrophicFailure, 5)]
-    [InlineData("Apprentice", QuestStatus.Success,            60)]
-    [InlineData("Apprentice", QuestStatus.Failure,            20)]
-    [InlineData("Veteran",    QuestStatus.Success,           120)]
-    [InlineData("Veteran",    QuestStatus.Failure,            40)]
-    [InlineData("Elite",      QuestStatus.Success,           250)]
-    [InlineData("Elite",      QuestStatus.Failure,            80)]
-    [InlineData("Legendary",  QuestStatus.Success,           500)]
-    [InlineData("Legendary",  QuestStatus.Failure,           150)]
+    [InlineData(DifficultyTier.Novice,     QuestStatus.Success,            25)]
+    [InlineData(DifficultyTier.Novice,     QuestStatus.Failure,            10)]
+    [InlineData(DifficultyTier.Novice,     QuestStatus.CatastrophicFailure, 5)]
+    [InlineData(DifficultyTier.Apprentice, QuestStatus.Success,            60)]
+    [InlineData(DifficultyTier.Apprentice, QuestStatus.Failure,            20)]
+    [InlineData(DifficultyTier.Veteran,    QuestStatus.Success,           120)]
+    [InlineData(DifficultyTier.Veteran,    QuestStatus.Failure,            40)]
+    [InlineData(DifficultyTier.Elite,      QuestStatus.Success,           250)]
+    [InlineData(DifficultyTier.Elite,      QuestStatus.Failure,            80)]
+    [InlineData(DifficultyTier.Legendary,  QuestStatus.Success,           500)]
+    [InlineData(DifficultyTier.Legendary,  QuestStatus.Failure,           150)]
     public void CalculateXpAwarded_NonCritical_ReturnsFlat(
-        string tier, QuestStatus outcome, int expectedXp)
+        DifficultyTier tier, QuestStatus outcome, int expectedXp)
     {
         var service = new QuestResolutionService(new FakeRandomProvider(1.0));
         Assert.Equal(expectedXp, service.CalculateXpAwarded(outcome, tier, 1.0));
@@ -107,51 +132,51 @@ public class QuestResolutionServiceTests
     [Fact]
     public void CalculateXpAwarded_CriticalSuccess_ScalesByRatio()
     {
-        // Novice baseXp=25, ratio=1.60, jitter midpoint=1.0 (FakeRandomProvider returns 1.0 → maps to 1.0 in 0.9–1.1 range)
+        // Novice baseXp=25, ratio=1.60, jitter midpoint=1.0 (FakeRandomProvider returns 1.0 ? maps to 1.0 in 0.9–1.1 range)
         // overageMultiplier = min(1.60, 2.0) = 1.60
-        // jitter: NextDouble(0.9, 1.1) with t=1.0 → 0.9 + (1.0 × 0.2) = 1.1
+        // jitter: NextDouble(0.9, 1.1) with t=1.0 ? 0.9 + (1.0 × 0.2) = 1.1
         // xp = round(25 × 1.60 × 1.1) = round(44.0) = 44
         var service = new QuestResolutionService(new FakeRandomProvider(1.0));
-        var xp = service.CalculateXpAwarded(QuestStatus.CriticalSuccess, "Novice", teamPowerRatio: 1.60);
+        var xp = service.CalculateXpAwarded(QuestStatus.CriticalSuccess, DifficultyTier.Novice, teamPowerRatio: 1.60);
         Assert.Equal(44, xp);
     }
 
     [Fact]
     public void CalculateXpAwarded_CriticalSuccess_CapsMultiplierAtTwo()
     {
-        // ratio=3.0 → capped at 2.0
-        // jitter t=1.0 → 1.1
+        // ratio=3.0 ? capped at 2.0
+        // jitter t=1.0 ? 1.1
         // xp = round(25 × 2.0 × 1.1) = round(55.0) = 55
         var service = new QuestResolutionService(new FakeRandomProvider(1.0));
-        var xp = service.CalculateXpAwarded(QuestStatus.CriticalSuccess, "Novice", teamPowerRatio: 3.0);
+        var xp = service.CalculateXpAwarded(QuestStatus.CriticalSuccess, DifficultyTier.Novice, teamPowerRatio: 3.0);
         Assert.Equal(55, xp);
     }
 
     // --- CalculateGoldAwarded ---
 
     [Theory]
-    [InlineData(QuestStatus.Failure,             "Novice", 0)]
-    [InlineData(QuestStatus.CatastrophicFailure, "Novice", 0)]
+    [InlineData(QuestStatus.Failure,             DifficultyTier.Novice, 0)]
+    [InlineData(QuestStatus.CatastrophicFailure, DifficultyTier.Novice, 0)]
     public void CalculateGoldAwarded_NoRewardOutcomes_ReturnsZero(
-        QuestStatus outcome, string tier, int expected)
+        QuestStatus outcome, DifficultyTier tier, int expected)
     {
         var service = new QuestResolutionService(new FakeRandomProvider(0.5));
         Assert.Equal(expected, service.CalculateGoldAwarded(outcome, tier, 1.0));
     }
 
     [Theory]
-    [InlineData(QuestStatus.Success,         "Novice",      15, 30)]
-    [InlineData(QuestStatus.CriticalSuccess, "Novice",      30, 60)]
-    [InlineData(QuestStatus.Success,         "Apprentice",  40, 70)]
-    [InlineData(QuestStatus.CriticalSuccess, "Apprentice",  80, 140)]
-    [InlineData(QuestStatus.Success,         "Veteran",     80, 140)]
-    [InlineData(QuestStatus.CriticalSuccess, "Veteran",    160, 280)]
-    [InlineData(QuestStatus.Success,         "Elite",      175, 300)]
-    [InlineData(QuestStatus.CriticalSuccess, "Elite",      350, 600)]
-    [InlineData(QuestStatus.Success,         "Legendary",  350, 600)]
-    [InlineData(QuestStatus.CriticalSuccess, "Legendary",  700, 1200)]
+    [InlineData(QuestStatus.Success,         DifficultyTier.Novice,      15, 30)]
+    [InlineData(QuestStatus.CriticalSuccess, DifficultyTier.Novice,      30, 60)]
+    [InlineData(QuestStatus.Success,         DifficultyTier.Apprentice,  40, 70)]
+    [InlineData(QuestStatus.CriticalSuccess, DifficultyTier.Apprentice,  80, 140)]
+    [InlineData(QuestStatus.Success,         DifficultyTier.Veteran,     80, 140)]
+    [InlineData(QuestStatus.CriticalSuccess, DifficultyTier.Veteran,    160, 280)]
+    [InlineData(QuestStatus.Success,         DifficultyTier.Elite,      175, 300)]
+    [InlineData(QuestStatus.CriticalSuccess, DifficultyTier.Elite,      350, 600)]
+    [InlineData(QuestStatus.Success,         DifficultyTier.Legendary,  350, 600)]
+    [InlineData(QuestStatus.CriticalSuccess, DifficultyTier.Legendary,  700, 1200)]
     public void CalculateGoldAwarded_RewardOutcomes_FallsWithinRange(
-        QuestStatus outcome, string tier, int expectedMin, int expectedMax)
+        QuestStatus outcome, DifficultyTier tier, int expectedMin, int expectedMax)
     {
         // FakeRandomProvider.NextInt returns midpoint, which is always within range
         var service = new QuestResolutionService(new FakeRandomProvider(0.5));

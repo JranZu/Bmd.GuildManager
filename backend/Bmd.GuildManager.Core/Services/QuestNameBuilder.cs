@@ -1,10 +1,12 @@
-﻿namespace Bmd.GuildManager.Core.Services;
+﻿using Bmd.GuildManager.Core.Models;
+
+namespace Bmd.GuildManager.Core.Services;
 
 internal static class QuestNameBuilder
 {
     private static readonly Random Random = new();
 
-    internal static string BuildName(string tier, string riskLevel, string questType)
+    internal static string BuildName(DifficultyTier tier, string riskLevel, string questType)
     {
         var location = Pick(QuestWordPools.LocationsForTier(tier));
         var adjective = Pick(QuestWordPools.AdjectivesForRisk(riskLevel));
@@ -48,11 +50,11 @@ internal static class QuestNameBuilder
                 () => $"Safe Passage through {Capitalize(location)}"
             ])(),
 
-            _ => $"A {Capitalize(tier)} Contract"
+            _ => $"A {Capitalize(tier.ToString())} Contract"
         };
     }
 
-    internal static string BuildDescription(string tier, string riskLevel, string questType)
+    internal static string BuildDescription(DifficultyTier tier, string riskLevel, string questType)
     {
         var location = Pick(QuestWordPools.LocationsForTier(tier));
         var adjective = Pick(QuestWordPools.AdjectivesForRisk(riskLevel));

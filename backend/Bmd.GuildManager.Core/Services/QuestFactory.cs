@@ -6,10 +6,10 @@ public static class QuestFactory
 {
     private static readonly Random Random = new();
 
-    private static readonly string[] Tiers =
-        ["Novice", "Apprentice", "Veteran", "Elite", "Legendary"];
+    private static readonly DifficultyTier[] Tiers =
+        [DifficultyTier.Novice, DifficultyTier.Apprentice, DifficultyTier.Veteran, DifficultyTier.Elite, DifficultyTier.Legendary];
 
-    public static Quest Generate(string tier)
+    public static Quest Generate(DifficultyTier tier)
     {
         var (minDifficulty, maxDifficulty,
              minAdventurers, maxAdventurers,
@@ -41,7 +41,7 @@ public static class QuestFactory
             EstimatedCompletionAt:  null);
     }
 
-    public static IReadOnlyList<string> AllTiers() => Tiers;
+    public static IReadOnlyList<DifficultyTier> AllTiers() => Tiers;
 
     private static string PickQuestType() =>
         Random.Next(5) switch
@@ -64,14 +64,14 @@ public static class QuestFactory
     private static (int minDiff, int maxDiff,
                     int minAdv, int maxAdv,
                     int minDur, int maxDur)
-        GetTierParameters(string tier) => tier switch
+        GetTierParameters(DifficultyTier tier) => tier switch
     {
-        "Novice"      => (10,  30,  1, 1, 60,   180),
-        "Apprentice"  => (25,  60,  1, 2, 120,  300),
-        "Veteran"     => (50,  100, 2, 3, 240,  600),
-        "Elite"       => (90,  160, 3, 4, 480,  900),
-        "Legendary"   => (150, 250, 4, 5, 600,  1800),
-        _             => throw new ArgumentOutOfRangeException(
-                             nameof(tier), $"Unknown tier: {tier}")
+        DifficultyTier.Novice      => (9,   60,  1, 1, 60,   180),
+        DifficultyTier.Apprentice  => (60,  120, 1, 2, 120,  300),
+        DifficultyTier.Veteran     => (120, 240, 2, 3, 240,  600),
+        DifficultyTier.Elite       => (240, 480, 3, 4, 480,  900),
+        DifficultyTier.Legendary   => (480, 960, 4, 5, 600,  1800),
+        _                => throw new ArgumentOutOfRangeException(
+                                nameof(tier), $"Unknown tier: {tier}")
     };
 }

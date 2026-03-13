@@ -29,7 +29,7 @@ public class FakeQuestRepository : IQuestRepository
         return Task.FromResult<IReadOnlyList<Quest>>(results);
     }
 
-    public Task<int> CountAvailableByTierAsync(string tier)
+    public Task<int> CountAvailableByTierAsync(DifficultyTier tier)
     {
         var count = Quests.Count(q =>
             q.Status == QuestStatus.Available &&

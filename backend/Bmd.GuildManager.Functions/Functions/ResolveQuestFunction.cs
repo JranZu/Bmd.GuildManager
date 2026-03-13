@@ -74,8 +74,8 @@ public class ResolveQuestFunction(
         {
             var charDoc = await characterRepository
                 .FindByCharacterIdAsync(characterId, playerId);
-            if (charDoc is not null)
-                characters.Add(charDoc.Document);
+            if (charDoc is not null)            
+                characters.Add(charDoc.Document);            
         }
 
         if (characters.Count == 0)

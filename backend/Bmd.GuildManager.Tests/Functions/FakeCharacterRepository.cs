@@ -6,6 +6,7 @@ namespace Bmd.GuildManager.Tests.Functions;
 public class FakeCharacterRepository : ICharacterRepository
 {
     public List<Character> Characters { get; } = [];
+    public int UpdateCallCount { get; private set; }
 
     public Task CreateAsync(Character character)
     {
@@ -15,6 +16,7 @@ public class FakeCharacterRepository : ICharacterRepository
 
     public Task UpdateAsync(Character character, string etag)
     {
+        UpdateCallCount++;
         var index = Characters.FindIndex(c => c.CharacterId == character.CharacterId);
         if (index >= 0)
             Characters[index] = character;

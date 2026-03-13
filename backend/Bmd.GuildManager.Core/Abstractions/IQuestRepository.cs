@@ -7,7 +7,7 @@ public interface IQuestRepository
     Task CreateAsync(Quest quest);
     Task<CosmosDocument<Quest>?> FindByQuestIdAsync(Guid questId);
     Task<IReadOnlyList<Quest>> GetAvailableQuestsAsync();
-    Task<int> CountAvailableByTierAsync(string tier);
+    Task<int> CountAvailableByTierAsync(DifficultyTier tier);
     Task UpdateAsync(Quest quest, string etag);
     Task DeleteAsync(Guid questId);
 }

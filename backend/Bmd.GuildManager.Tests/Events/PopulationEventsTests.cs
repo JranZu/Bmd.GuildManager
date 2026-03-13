@@ -27,7 +27,7 @@ public class PopulationEventsTests
     [Fact]
     public void PopulationUpdated_RoundTrip()
     {
-        var payload = new PopulationUpdated(100, 50, 20, 5);
+        var payload = new PopulationUpdated(1000, 500, 200, 50, 10);
         var envelope = EventEnvelope<PopulationUpdated>.Create("population-service", Guid.NewGuid(), payload);
 
         var json = JsonSerializer.Serialize(envelope, JsonOptions);
@@ -35,7 +35,11 @@ public class PopulationEventsTests
 
         Assert.NotNull(result);
         Assert.Equal("PopulationUpdated", result.EventType);
-        Assert.Equal(payload, result.Data);
+        Assert.Equal(payload.Novice,      result.Data.Novice);
+        Assert.Equal(payload.Apprentice,  result.Data.Apprentice);
+        Assert.Equal(payload.Veteran,     result.Data.Veteran);
+        Assert.Equal(payload.Elite,       result.Data.Elite);
+        Assert.Equal(payload.Legendary,   result.Data.Legendary);
     }
 
     [Fact]

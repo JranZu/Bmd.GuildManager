@@ -83,7 +83,9 @@ Characters have the following attributes:
 
 ### Character Tier
 
-A character's Tier is a derived classification representing their current overall power level. It is not stored directly — it is calculated from the items they have equipped.
+A character's Tier is a **derived classification** based on the items they have equipped. It is not stored directly — it is calculated on demand from the character's `Equipment` list.
+
+**Tier and Level are independent.** Level is a progression value (1–20) driven by accumulated XP. Tier reflects equipment power. A well-equipped Level 1 character can have a higher Tier than an unequipped Level 15 character. Neither implies the other.
 
 The tier scale used across the entire game (characters, items, quests) is:
 
@@ -101,13 +103,25 @@ Character Tier is calculated as:
 Character Tier = sum of (tier numeric value of each equipped item) ÷ total equipment slots
 ```
 
-The divisor is always total equipment slots, not the number of filled slots. A character with one Legendary item equipped and four empty slots is Novice-tier, not Legendary. Tier is rounded to the nearest integer and mapped back to the tier name.
+The divisor is always **7** (total equipment slots), not the number of filled slots. A character with one Legendary item equipped and six empty slots is Novice-tier, not Legendary. Tier is rounded to the nearest integer and mapped back to the tier name.
 
 A character with no items equipped has a tier of Novice (1).
 
+> `Character.CalculateTier()` should be implemented as a method on the `Character` model in `Bmd.GuildManager.Core`.
+
 ### Equipment Slots
 
-Each character has a fixed number of equipment slots. The exact number of slots and their named types (e.g. weapon, armor, ring) are to be defined in the Pre-Phase Design session for Phase 13.
+Each character has **7 equipment slots**:
+
+| Slot | Description |
+| ---- | ----------- |
+| MainHand | Primary weapon or tool |
+| Offhand | Shield, off-hand weapon, or secondary tool |
+| Chest | Body armor |
+| Head | Helmet or headwear |
+| Feet | Boots or footwear |
+| Ring | Ring or band |
+| Accessory | Necklace, pendant, or trinket |
 
 ### XP Thresholds
 
@@ -260,7 +274,7 @@ teamPowerRatio = Effective Team Power / Difficulty Rating  (expressed as a perce
 
 ### Outcome Thresholds
 
-These values are initial design decisions and are expected to be tuned. They should be stored in Azure App Configuration (Phase 28), not hardcoded.
+These values are initial design decisions and are expected to be tuned. They should be stored in Azure App Configuration, not hardcoded.
 
 | teamPowerRatio | Outcome |
 | -------------- | ------- |
@@ -336,12 +350,12 @@ This keeps the Quests container small and operational. The Blob Storage archive 
 
 ### Character Death
 
-Characters that die during a quest are **permanently removed** from the guild.
+Characters that die during a quest are **permanently removed** from active use.
 
 Consequences of character death:
 
-* the character is marked as Dead and cannot be used again
-* equipped items on a dead character are lost
+* the character is set to `Dead` status and retained in Cosmos DB (soft-delete); they cannot be assigned to quests or have equipment changed
+* equipped items remain on the dead character document with `Equipped` status and cannot be retrieved — no item status update is required (there is no separate Items container)
 * the player is notified in real time via SignalR
 * the death is recorded for analytics and world news
 
@@ -361,7 +375,7 @@ Each item contains:
 | StrengthBonus | Integer bonus to character Strength when equipped. 0 if not a strength item. |
 | LuckBonus | Integer bonus to character Luck when equipped. 0 if not a luck item. |
 | EnduranceBonus | Integer bonus to character Endurance when equipped. 0 if not an endurance item. |
-| BasePrice | Base gold value used in the market pricing formula. Defined per tier and rarity. Exact values to be defined in Phase 11 pre-phase design. |
+| BasePrice | Base gold value used in the market pricing formula. Defined per tier and rarity. |
 | Status | Stashed / Equipping / Equipped / Unequipping / Selling / ForSale / Returning / Sold / Discarded / Lost |
 
 ### Item Drop Tier Rules
@@ -369,8 +383,6 @@ Each item contains:
 Items that drop from a quest are at or below the quest's tier. Finding an item more than one tier above the quest's tier is possible but very rare. In normal play the player should expect to receive items at or below the tier of quest they are running.
 
 Example: a Veteran-tier quest will typically produce Veteran or lower items. An Elite item from a Veteran quest is a rare bonus, not the norm. A Legendary item from a Veteran quest does not occur.
-
-The exact stat bonus ranges per tier and rarity are to be defined in the Pre-Phase Design session for Phase 11.
 
 Items can be:
 
