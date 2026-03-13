@@ -3,7 +3,7 @@
 namespace Bmd.GuildManager.Core.Events;
 
 public record PopulationUpdateScheduled(
-    [property: JsonPropertyName("scheduledTime")] DateTime ScheduledTime);
+    [property: JsonPropertyName("scheduledTime")] DateTimeOffset ScheduledTime);
 
 public record PopulationUpdated(
     [property: JsonPropertyName("novice")]      int Novice,

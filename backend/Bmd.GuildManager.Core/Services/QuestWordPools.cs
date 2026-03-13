@@ -57,7 +57,7 @@ internal static class QuestWordPools
     internal static readonly string[] AdjectivesMedium =
     [
         "dangerous", "treacherous", "grim", "cursed", "troubled",
-        "volatile", "desperate", "bitter", "dark", "grim"
+        "volatile", "desperate", "bitter", "dark", "harrowing"
     ];
 
     internal static readonly string[] AdjectivesHigh =

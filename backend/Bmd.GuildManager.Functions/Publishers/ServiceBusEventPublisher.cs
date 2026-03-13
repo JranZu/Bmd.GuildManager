@@ -1,20 +1,19 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Events;
+using Bmd.GuildManager.Functions.Serialization;
 using System.Text.Json;
 
 namespace Bmd.GuildManager.Functions.Publishers;
 
-public class ServiceBusEventPublisher(ServiceBusClient serviceBusClient, string topicName) : IEventPublisher
+public class ServiceBusEventPublisher(ServiceBusClient serviceBusClient, string topicName)
+	: IEventPublisher, IAsyncDisposable
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
+	private readonly ServiceBusSender _sender = serviceBusClient.CreateSender(topicName);
 
-    public async Task PublishAsync<T>(EventEnvelope<T> envelope)
-    {
-        var messageBody = JsonSerializer.Serialize(envelope, JsonOptions);
+	public async Task PublishAsync<T>(EventEnvelope<T> envelope)
+	{
+		var messageBody = JsonSerializer.Serialize(envelope, FunctionJsonOptions.Default);
 		var message = new ServiceBusMessage(messageBody)
 		{
 			ContentType = "application/json",
@@ -22,7 +21,8 @@ public class ServiceBusEventPublisher(ServiceBusClient serviceBusClient, string 
 			Subject = envelope.EventType
 		};
 
-		await using var sender = serviceBusClient.CreateSender(topicName);
-        await sender.SendMessageAsync(message);
-    }
+		await _sender.SendMessageAsync(message);
+	}
+
+	public ValueTask DisposeAsync() => _sender.DisposeAsync();
 }

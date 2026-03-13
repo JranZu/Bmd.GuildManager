@@ -35,9 +35,9 @@ public class QuestResolutionService(IRandomProvider random)
 
     // --- Team power ---
 
-    /// <summary>
-    /// Calculates aggregate team power by summing each character's TotalPower
-	/// /// </summary>
+	/// <summary>
+	/// Calculates aggregate team power by summing each character's TotalPower.
+	/// </summary>
     public static int CalculateTeamPower(IReadOnlyList<Character> characters)
     {
         return characters.Sum(c => c.TotalPower);

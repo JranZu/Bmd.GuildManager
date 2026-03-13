@@ -9,7 +9,7 @@ namespace Bmd.GuildManager.Core.Events;
 public record EventEnvelope<T>(
     [property: JsonPropertyName("eventId")] Guid EventId,
     [property: JsonPropertyName("eventType")] string EventType,
-    [property: JsonPropertyName("timestamp")] DateTime Timestamp,
+    [property: JsonPropertyName("timestamp")] DateTimeOffset Timestamp,
     [property: JsonPropertyName("correlationId")] Guid CorrelationId,
     [property: JsonPropertyName("source")] string Source,
     [property: JsonPropertyName("version")] int Version,
@@ -19,11 +19,11 @@ public record EventEnvelope<T>(
     /// Creates a new <see cref="EventEnvelope{T}"/> with auto-populated
     /// <see cref="EventId"/>, <see cref="Timestamp"/>, and <see cref="Version"/>.
     /// </summary>
-    public static EventEnvelope<T> Create(string source, Guid correlationId, T data) =>
+    public static EventEnvelope<T> Create(string source, Guid correlationId, T data, Guid? eventId = null, DateTimeOffset? timestamp = null) =>
         new(
-            EventId: Guid.NewGuid(),
+            EventId: eventId ?? Guid.NewGuid(),
             EventType: typeof(T).Name,
-            Timestamp: DateTime.UtcNow,
+            Timestamp: timestamp ?? DateTimeOffset.UtcNow,
             CorrelationId: correlationId,
             Source: source,
             Version: 1,

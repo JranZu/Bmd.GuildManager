@@ -2,6 +2,7 @@
 using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
+using Bmd.GuildManager.Functions.Serialization;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
@@ -12,11 +13,6 @@ public class HandleQuestResolvedFunction(
     ICharacterRepository characterRepository,
     ILogger<HandleQuestResolvedFunction> logger)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     [Function("HandleQuestResolved")]
     public async Task RunAsync(
         [ServiceBusTrigger("quest-events", "character-quest-resolved-sub",
@@ -28,7 +24,7 @@ public class HandleQuestResolvedFunction(
         try
         {
             envelope = JsonSerializer.Deserialize<EventEnvelope<QuestResolved>>(
-                messageBody, JsonOptions);
+                messageBody, FunctionJsonOptions.Default);
         }
         catch (JsonException ex)
         {

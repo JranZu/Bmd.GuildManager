@@ -5,6 +5,7 @@ using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
 using Bmd.GuildManager.Core.Services;
+using Bmd.GuildManager.Functions.Serialization;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -21,11 +22,6 @@ public class ResolveQuestFunction(
 {
     private const string ArchiveContainer = "quest-archive";
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     [Function("ResolveQuest")]
     public async Task RunAsync(
         [ServiceBusTrigger("quest-completed", Connection = "ServiceBusConnectionString")]
@@ -36,7 +32,7 @@ public class ResolveQuestFunction(
         try
         {
             envelope = JsonSerializer.Deserialize<EventEnvelope<QuestCompleted>>(
-                messageBody, JsonOptions);
+                messageBody, FunctionJsonOptions.Default);
         }
         catch (JsonException ex)
         {
@@ -142,12 +138,13 @@ public class ResolveQuestFunction(
     private async Task ArchiveAndDeleteQuestAsync(Quest quest)
     {
         var containerClient = blobServiceClient.GetBlobContainerClient(ArchiveContainer);
+        await containerClient.CreateIfNotExistsAsync();
 
         var now = DateTimeOffset.UtcNow;
         var blobName = $"{now.Year}/{now.Month:D2}/{quest.QuestId}.json";
         var blobClient = containerClient.GetBlobClient(blobName);
 
-		var json = JsonSerializer.Serialize(quest, JsonOptions);
+		var json = JsonSerializer.Serialize(quest, FunctionJsonOptions.Default);
 		var bytes = Encoding.UTF8.GetBytes(json);
 
         await blobClient.UploadAsync(

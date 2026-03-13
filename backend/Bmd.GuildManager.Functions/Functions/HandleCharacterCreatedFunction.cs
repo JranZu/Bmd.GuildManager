@@ -2,6 +2,7 @@
 using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
+using Bmd.GuildManager.Functions.Serialization;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
@@ -11,11 +12,6 @@ public class HandleCharacterCreatedFunction(
 	ICharacterRepository characterRepository,
 	ILogger<HandleCharacterCreatedFunction> logger)
 {
-	private static readonly JsonSerializerOptions JsonOptions = new()
-	{
-		PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-	};
-
 	[Function("HandleCharacterCreated")]
 	public async Task RunAsync(
 		[ServiceBusTrigger("player-events", "character-created-sub",
@@ -26,7 +22,7 @@ public class HandleCharacterCreatedFunction(
 		try
 		{
 			envelope = JsonSerializer.Deserialize<EventEnvelope<CharacterCreated>>(
-				message, JsonOptions);
+				message, FunctionJsonOptions.Default);
 		}
 		catch (JsonException ex)
 		{
@@ -59,19 +55,14 @@ public class HandleCharacterCreatedFunction(
 			return;
 		}
 
-		var character = new Character(
-			Id:                  data.CharacterId.ToString(),
-			CharacterId:         data.CharacterId,
-			PlayerId:            data.PlayerId,
-			Name:                data.Name,
-			Level:               data.Level,
-			Strength:            data.Strength,
-			Luck:                data.Luck,
-			Endurance:           data.Endurance,
-			Status:              CharacterStatus.Idle,
-			Equipment:           [],
-			Xp:                  0,
-			ActiveQuestSnapshot: null);
+		var character = Character.CreateWithId(
+			data.CharacterId,
+			data.PlayerId,
+			data.Name,
+			data.Level,
+			data.Strength,
+			data.Luck,
+			data.Endurance);
 
 		await characterRepository.CreateAsync(character);
 

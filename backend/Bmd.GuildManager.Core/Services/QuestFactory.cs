@@ -4,8 +4,6 @@ namespace Bmd.GuildManager.Core.Services;
 
 public static class QuestFactory
 {
-    private static readonly Random Random = new();
-
     private static readonly DifficultyTier[] Tiers =
         [DifficultyTier.Novice, DifficultyTier.Apprentice, DifficultyTier.Veteran, DifficultyTier.Elite, DifficultyTier.Legendary];
 
@@ -18,9 +16,9 @@ public static class QuestFactory
         var questId = Guid.NewGuid();
         var questType = PickQuestType();
         var riskLevel = PickRiskLevel();
-        var difficulty = Random.Next(minDifficulty, maxDifficulty + 1);
-        var adventurers = Random.Next(minAdventurers, maxAdventurers + 1);
-        var duration = Random.Next(minDuration, maxDuration + 1);
+        var difficulty = Random.Shared.Next(minDifficulty, maxDifficulty + 1);
+        var adventurers = Random.Shared.Next(minAdventurers, maxAdventurers + 1);
+        var duration = Random.Shared.Next(minDuration, maxDuration + 1);
 
         return new Quest(
             Id:                     questId.ToString(),
@@ -44,7 +42,7 @@ public static class QuestFactory
     public static IReadOnlyList<DifficultyTier> AllTiers() => Tiers;
 
     private static string PickQuestType() =>
-        Random.Next(5) switch
+        Random.Shared.Next(5) switch
         {
             0 => "Kill",
             1 => "Gather",
@@ -54,7 +52,7 @@ public static class QuestFactory
         };
 
     private static string PickRiskLevel() =>
-        Random.Next(10) switch
+        Random.Shared.Next(10) switch
         {
             < 4 => "Low",
             < 8 => "Medium",

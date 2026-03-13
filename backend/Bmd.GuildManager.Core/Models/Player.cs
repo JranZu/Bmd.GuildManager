@@ -7,12 +7,12 @@ public record Player(
 	[property: JsonPropertyName("playerId")]       Guid PlayerId,
 	[property: JsonPropertyName("guildName")]      string GuildName,
 	[property: JsonPropertyName("gold")]           int Gold,
-	[property: JsonPropertyName("createdDate")]    DateTime CreatedDate,
-	[property: JsonPropertyName("onboardedAt")]    DateTime? OnboardedAt,
+	[property: JsonPropertyName("createdDate")]    DateTimeOffset CreatedDate,
+	[property: JsonPropertyName("onboardedAt")]    DateTimeOffset? OnboardedAt,
 	[property: JsonPropertyName("idempotencyKey")] string? IdempotencyKey,
 	[property: JsonPropertyName("stash")]          IReadOnlyList<Item> Stash)
 {
-	public static Player Create(string guildName, string? idempotencyKey = null)
+	public static Player Create(string guildName, string? idempotencyKey = null, DateTimeOffset? createdDate = null)
 	{
 		var playerId = Guid.NewGuid();
 		return new Player(
@@ -20,7 +20,7 @@ public record Player(
 			PlayerId:       playerId,
 			GuildName:      guildName,
 			Gold:           0,
-			CreatedDate:    DateTime.UtcNow,
+			CreatedDate:    createdDate ?? DateTimeOffset.UtcNow,
 			OnboardedAt:    null,
 			IdempotencyKey: idempotencyKey,
 			Stash:          []);

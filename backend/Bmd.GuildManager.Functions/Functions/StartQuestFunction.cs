@@ -3,6 +3,7 @@ using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
 using Bmd.GuildManager.Core.Models.Requests;
+using Bmd.GuildManager.Functions.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
@@ -21,11 +22,6 @@ public class StartQuestFunction(
 {
     private const string QuestCompletedQueue = "quest-completed";
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     [Function("StartQuest")]
     public async Task<IActionResult> RunAsync(
         [HttpTrigger(AuthorizationLevel.Function, "post",
@@ -36,7 +32,7 @@ public class StartQuestFunction(
         try
         {
             request = await JsonSerializer
-                .DeserializeAsync<StartQuestRequest>(req.Body, JsonOptions);
+                .DeserializeAsync<StartQuestRequest>(req.Body, FunctionJsonOptions.Default);
         }
         catch (JsonException)
         {
@@ -216,7 +212,7 @@ public class StartQuestFunction(
             correlationId: correlationId,
             data: questCompleted);
 
-        var messageBody = JsonSerializer.Serialize(completedEnvelope, JsonOptions);
+        var messageBody = JsonSerializer.Serialize(completedEnvelope, FunctionJsonOptions.Default);
 
         await messageScheduler.ScheduleMessageAsync(
             QuestCompletedQueue,

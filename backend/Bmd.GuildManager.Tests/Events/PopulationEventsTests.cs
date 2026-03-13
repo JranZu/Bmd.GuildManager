@@ -13,7 +13,7 @@ public class PopulationEventsTests
     [Fact]
     public void PopulationUpdateScheduled_RoundTrip()
     {
-        var payload = new PopulationUpdateScheduled(DateTime.UtcNow);
+        var payload = new PopulationUpdateScheduled(DateTimeOffset.UtcNow);
         var envelope = EventEnvelope<PopulationUpdateScheduled>.Create("population-service", Guid.NewGuid(), payload);
 
         var json = JsonSerializer.Serialize(envelope, JsonOptions);

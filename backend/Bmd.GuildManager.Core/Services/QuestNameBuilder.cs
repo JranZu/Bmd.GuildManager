@@ -4,8 +4,6 @@ namespace Bmd.GuildManager.Core.Services;
 
 internal static class QuestNameBuilder
 {
-    private static readonly Random Random = new();
-
     internal static string BuildName(DifficultyTier tier, string riskLevel, string questType)
     {
         var location = Pick(QuestWordPools.LocationsForTier(tier));
@@ -103,10 +101,10 @@ internal static class QuestNameBuilder
     }
 
     private static T Pick<T>(T[] options) =>
-        options[Random.Next(options.Length)];
+        options[Random.Shared.Next(options.Length)];
 
     private static string Pick(string[] options) =>
-        options[Random.Next(options.Length)];
+        options[Random.Shared.Next(options.Length)];
 
     private static string Capitalize(string input) =>
         string.IsNullOrEmpty(input)

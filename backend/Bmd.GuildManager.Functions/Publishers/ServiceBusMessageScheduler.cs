@@ -16,7 +16,7 @@ public class ServiceBusMessageScheduler(ServiceBusClient serviceBusClient) : IMe
             ContentType = "application/json"
         };
 
-        var sender = serviceBusClient.CreateSender(queueOrTopicName);
+        await using var sender = serviceBusClient.CreateSender(queueOrTopicName);
         await sender.SendMessageAsync(message);
     }
 }

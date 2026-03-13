@@ -4,6 +4,7 @@ using Bmd.GuildManager.Core.Constants;
 using Bmd.GuildManager.Core.Data;
 using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
+using Bmd.GuildManager.Functions.Serialization;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -14,11 +15,6 @@ public class HandleStarterCharactersGrantedFunction(
 	[FromKeyedServices("player-events")] IEventPublisher eventPublisher,
 	ILogger<HandleStarterCharactersGrantedFunction> logger)
 {
-	private static readonly JsonSerializerOptions JsonOptions = new()
-	{
-		PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-	};
-
 	[Function("HandleStarterCharactersGranted")]
 	public async Task RunAsync(
 		[ServiceBusTrigger("player-events", "starter-characters-sub",
@@ -29,7 +25,7 @@ public class HandleStarterCharactersGrantedFunction(
 		try
 		{
 			envelope = JsonSerializer.Deserialize<EventEnvelope<StarterCharactersGranted>>(
-				message, JsonOptions);
+				message, FunctionJsonOptions.Default);
 		}
 		catch (JsonException ex)
 		{

@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Events;
+using Bmd.GuildManager.Functions.Serialization;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,12 +14,7 @@ public class OnboardPlayerFunction(
 	[FromKeyedServices("player-events")] IEventPublisher eventPublisher,
 	ILogger<OnboardPlayerFunction> logger)
 {
-	const int STARTING_GOLD = 500;
-
-	private static readonly JsonSerializerOptions JsonOptions = new()
-	{
-		PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-	};
+	const int StartingGold = 500;
 
 	[Function("OnboardPlayer")]
 	public async Task RunAsync(
@@ -30,7 +26,7 @@ public class OnboardPlayerFunction(
 		try
 		{
 			envelope = JsonSerializer.Deserialize<EventEnvelope<PlayerCreated>>(
-				message, JsonOptions);
+				message, FunctionJsonOptions.Default);
 		}
 		catch (JsonException ex)
 		{
@@ -69,7 +65,7 @@ public class OnboardPlayerFunction(
 			return;
 		}
 
-		var updatedPlayer = player with { Gold = STARTING_GOLD, OnboardedAt = DateTime.UtcNow };
+		var updatedPlayer = player with { Gold = StartingGold, OnboardedAt = DateTimeOffset.UtcNow };
 
 		try
 		{
@@ -86,9 +82,9 @@ public class OnboardPlayerFunction(
 			throw;
 		}
 
-		logger.LogInformation("Guild provisioned with {startingGold} gold for player {PlayerId}", STARTING_GOLD, playerId);
+		logger.LogInformation("Guild provisioned with {startingGold} gold for player {PlayerId}", StartingGold, playerId);
 
-		var guildCreated = new GuildCreated(playerId, guildName, STARTING_GOLD);
+		var guildCreated = new GuildCreated(playerId, guildName, StartingGold);
 		var guildCreatedEnvelope = EventEnvelope<GuildCreated>.Create(
 			source: "OnboardPlayerFunction",
 			correlationId: playerId,

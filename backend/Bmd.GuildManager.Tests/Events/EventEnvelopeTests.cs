@@ -77,17 +77,17 @@ public class EventEnvelopeTests
     [Fact]
     public void Create_SetsTimestampToUtc()
     {
-        var before = DateTime.UtcNow;
+        var before = DateTimeOffset.UtcNow;
 
         var envelope = EventEnvelope<SamplePayload>.Create(
             "quest-service",
             Guid.NewGuid(),
             new SamplePayload("Dragon Hunt", 5));
 
-        var after = DateTime.UtcNow;
+        var after = DateTimeOffset.UtcNow;
 
         Assert.InRange(envelope.Timestamp, before, after);
-        Assert.Equal(DateTimeKind.Utc, envelope.Timestamp.Kind);
+        Assert.Equal(TimeSpan.Zero, envelope.Timestamp.Offset);
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public class EventEnvelopeTests
     {
         var eventId = Guid.NewGuid();
         var correlationId = Guid.NewGuid();
-        var timestamp = DateTime.UtcNow;
+        var timestamp = DateTimeOffset.UtcNow;
         var payload = new SamplePayload("Dragon Hunt", 5);
 
         var a = new EventEnvelope<SamplePayload>(eventId, "SamplePayload", timestamp, correlationId, "quest-service", 1, payload);

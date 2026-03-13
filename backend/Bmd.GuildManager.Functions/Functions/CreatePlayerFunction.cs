@@ -3,6 +3,7 @@ using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
 using Bmd.GuildManager.Core.Models.Requests;
+using Bmd.GuildManager.Functions.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
@@ -16,11 +17,6 @@ public class CreatePlayerFunction(
 	[FromKeyedServices("player-events")] IEventPublisher eventPublisher,
     ILogger<CreatePlayerFunction> logger)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     [Function("CreatePlayer")]
     public async Task<IActionResult> RunAsync(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "players")] HttpRequest req)
@@ -28,7 +24,7 @@ public class CreatePlayerFunction(
         CreatePlayerRequest? request;
         try
         {
-            request = await JsonSerializer.DeserializeAsync<CreatePlayerRequest>(req.Body, JsonOptions);
+            request = await JsonSerializer.DeserializeAsync<CreatePlayerRequest>(req.Body, FunctionJsonOptions.Default);
         }
         catch (JsonException)
         {
