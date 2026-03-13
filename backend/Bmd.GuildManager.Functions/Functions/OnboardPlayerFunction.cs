@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Events;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -24,7 +25,7 @@ public class OnboardPlayerFunction(
 		[ServiceBusTrigger("player-events", "onboarding-sub", Connection = "ServiceBusConnectionString")]
 		string message)
 	{
-		var envelope = JsonSerializer.Deserialize<EventEnvelope<PlayerCreated>>(message, JsonOptions);
+		EventEnvelope<PlayerCreated>? envelope;
 
 		try
 		{
@@ -52,22 +53,38 @@ public class OnboardPlayerFunction(
 			playerId,
 			guildName);
 
-		var player = await playerRepository.FindByPlayerIdAsync(playerId);
+		var playerDoc = await playerRepository.FindByPlayerIdAsync(playerId);
 
-		if (player is null)
+		if (playerDoc is null)
 		{
 			logger.LogWarning("Player {PlayerId} not found during onboarding", playerId);
 			return;
 		}
 
-		if (player.Gold == STARTING_GOLD)
+		var player = playerDoc.Document;
+
+		if (player.OnboardedAt is not null)
 		{
 			logger.LogWarning("Player {PlayerId} already onboarded, skipping", playerId);
 			return;
 		}
 
-		var updatedPlayer = player with { Gold = STARTING_GOLD };
-		await playerRepository.UpdateAsync(updatedPlayer);
+		var updatedPlayer = player with { Gold = STARTING_GOLD, OnboardedAt = DateTime.UtcNow };
+
+		try
+		{
+			await playerRepository.UpdateAsync(updatedPlayer, playerDoc.ETag);
+		}
+		catch (CosmosException ex)
+			when (ex.StatusCode == System.Net.HttpStatusCode.PreconditionFailed)
+		{
+			// ETag conflict — another process updated this player concurrently.
+			// Re-throwing lets Service Bus retry the message.
+			logger.LogWarning(
+				"ETag conflict updating player {PlayerId} during onboarding — will retry via Service Bus",
+				playerId);
+			throw;
+		}
 
 		logger.LogInformation("Guild provisioned with {startingGold} gold for player {PlayerId}", STARTING_GOLD, playerId);
 

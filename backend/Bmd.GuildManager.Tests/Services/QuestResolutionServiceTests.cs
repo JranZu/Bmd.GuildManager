@@ -166,22 +166,53 @@ public class QuestResolutionServiceTests
 
     [Theory]
     [InlineData(QuestStatus.Success,         DifficultyTier.Novice,      15, 30)]
-    [InlineData(QuestStatus.CriticalSuccess, DifficultyTier.Novice,      30, 60)]
     [InlineData(QuestStatus.Success,         DifficultyTier.Apprentice,  40, 70)]
-    [InlineData(QuestStatus.CriticalSuccess, DifficultyTier.Apprentice,  80, 140)]
     [InlineData(QuestStatus.Success,         DifficultyTier.Veteran,     80, 140)]
-    [InlineData(QuestStatus.CriticalSuccess, DifficultyTier.Veteran,    160, 280)]
     [InlineData(QuestStatus.Success,         DifficultyTier.Elite,      175, 300)]
-    [InlineData(QuestStatus.CriticalSuccess, DifficultyTier.Elite,      350, 600)]
     [InlineData(QuestStatus.Success,         DifficultyTier.Legendary,  350, 600)]
-    [InlineData(QuestStatus.CriticalSuccess, DifficultyTier.Legendary,  700, 1200)]
-    public void CalculateGoldAwarded_RewardOutcomes_FallsWithinRange(
+    public void CalculateGoldAwarded_Success_FallsWithinRange(
         QuestStatus outcome, DifficultyTier tier, int expectedMin, int expectedMax)
     {
         // FakeRandomProvider.NextInt returns midpoint, which is always within range
         var service = new QuestResolutionService(new FakeRandomProvider(0.5));
         var gold = service.CalculateGoldAwarded(outcome, tier, 1.0);
         Assert.InRange(gold, expectedMin, expectedMax);
+    }
+
+    [Fact]
+    public void CalculateGoldAwarded_CriticalSuccess_AppliesOverageMultiplier()
+    {
+        // Novice Success range: 15–30, midpoint (baseGold) = 22.5
+        // ratio=1.60, overageMultiplier = min(1.60, 2.0) = 1.60
+        // scaled = round(22.5 × 1.60) = round(36.0) = 36
+        // CriticalSuccess range: 30–60, clamp(36, 30, 60) = 36
+        var service = new QuestResolutionService(new FakeRandomProvider(0.5));
+        var gold = service.CalculateGoldAwarded(QuestStatus.CriticalSuccess, DifficultyTier.Novice, teamPowerRatio: 1.60);
+        Assert.Equal(36, gold);
+    }
+
+    [Fact]
+    public void CalculateGoldAwarded_CriticalSuccess_CapsMultiplierAtTwo()
+    {
+        // Novice Success range: 15–30, midpoint = 22.5
+        // ratio=3.0 → capped at 2.0
+        // scaled = round(22.5 × 2.0) = round(45.0) = 45
+        // CriticalSuccess range: 30–60, clamp(45, 30, 60) = 45
+        var service = new QuestResolutionService(new FakeRandomProvider(0.5));
+        var gold = service.CalculateGoldAwarded(QuestStatus.CriticalSuccess, DifficultyTier.Novice, teamPowerRatio: 3.0);
+        Assert.Equal(45, gold);
+    }
+
+    [Fact]
+    public void CalculateGoldAwarded_CriticalSuccess_ClampsToMinRange()
+    {
+        // Novice Success range: 15–30, midpoint = 22.5
+        // ratio=1.0 → overageMultiplier = 1.0
+        // scaled = round(22.5 × 1.0) = round(22.5) = 22
+        // CriticalSuccess range: 30–60, clamp(22, 30, 60) = 30 (clamped to min)
+        var service = new QuestResolutionService(new FakeRandomProvider(0.5));
+        var gold = service.CalculateGoldAwarded(QuestStatus.CriticalSuccess, DifficultyTier.Novice, teamPowerRatio: 1.0);
+        Assert.Equal(30, gold);
     }
 
     // --- IsLootEligible ---

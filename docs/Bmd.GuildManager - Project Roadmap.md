@@ -1,4 +1,4 @@
-﻿# Guild Manager — Project Roadmap
+# Guild Manager — Project Roadmap
 
 ## Purpose
 
@@ -296,7 +296,7 @@ This document serves two purposes:
 - [x] A guild record exists in Cosmos DB with `startingGold: 500`
 - [x] `GuildCreated` event is published with correct `playerId` and `guildName`
 - [x] `StarterCharactersGranted` and `StarterItemsGranted` events are published when starter grants are configured
-- [x] Replaying the same `PlayerCreated` event does not create duplicate guild records (idempotency via `eventId` check)
+- [x] Replaying the same `PlayerCreated` event does not re-onboard the player (idempotency via `OnboardedAt` timestamp check)
 - [x] Unit and integration tests pass
 
 ---
@@ -459,7 +459,7 @@ This document serves two purposes:
 
 **Status:** ⬜
 
-**Goal:** Implement `GenerateLootFunction` which reacts to `QuestResolved` (when `lootGenerated: true`) and procedurally creates an item, publishing `LootGenerated`.
+**Goal:** Implement `GenerateLootFunction` which reacts to `QuestResolved` (when `lootEligible: true`) and procedurally creates an item, publishing `LootGenerated`.
 
 **Reference:** ECS §5 (`LootGenerated`), GDD §7 (Loot System), SAD §6 (Loot Generation Pipeline diagram)
 

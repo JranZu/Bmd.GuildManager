@@ -16,22 +16,28 @@ public class CosmosPlayerRepository(CosmosClient cosmosClient) : IPlayerReposito
 		await Container.CreateItemAsync(player, new PartitionKey(player.PlayerId.ToString()));
 	}
 
-	public async Task UpdateAsync(Player player)
+	public async Task UpdateAsync(Player player, string etag)
 	{
+		var options = new ItemRequestOptions
+		{
+			IfMatchEtag = etag
+		};
+
 		await Container.ReplaceItemAsync(
 			player,
 			player.Id,
-			new PartitionKey(player.PlayerId.ToString()));
+			new PartitionKey(player.PlayerId.ToString()),
+			options);
 	}
 
-	public async Task<Player?> FindByPlayerIdAsync(Guid playerId)
+	public async Task<CosmosDocument<Player>?> FindByPlayerIdAsync(Guid playerId)
 	{
 		try
 		{
 			var response = await Container.ReadItemAsync<Player>(
 				playerId.ToString(),
 				new PartitionKey(playerId.ToString()));
-			return response.Resource;
+			return new CosmosDocument<Player>(response.Resource, response.ETag);
 		}
 		catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
 		{

@@ -101,9 +101,9 @@ public class HandleStarterCharactersGrantedFunctionTests
         Assert.All(characters, c =>
         {
             Assert.Equal(1, c.Level);
-            Assert.InRange(c.Strength, 5, 10);
-            Assert.InRange(c.Luck, 5, 10);
-            Assert.InRange(c.Endurance, 5, 10);
+            Assert.InRange(c.Strength, 3, 10);
+            Assert.InRange(c.Luck, 3, 10);
+            Assert.InRange(c.Endurance, 3, 10);
         });
     }
 

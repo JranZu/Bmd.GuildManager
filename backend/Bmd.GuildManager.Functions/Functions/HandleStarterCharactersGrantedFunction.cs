@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Bmd.GuildManager.Core.Abstractions;
+using Bmd.GuildManager.Core.Constants;
 using Bmd.GuildManager.Core.Data;
 using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
@@ -70,9 +71,9 @@ public class HandleStarterCharactersGrantedFunction(
 				playerId: playerId,
 				name: name,
 				level: 1,
-				strength: Random.Shared.Next(5, 11),
-				luck: Random.Shared.Next(5, 11),
-				endurance: Random.Shared.Next(5, 11));
+				strength: Random.Shared.Next(GameConstants.MinStatValue, GameConstants.MaxStatValue + 1),
+				luck: Random.Shared.Next(GameConstants.MinStatValue, GameConstants.MaxStatValue + 1),
+				endurance: Random.Shared.Next(GameConstants.MinStatValue, GameConstants.MaxStatValue + 1));
 
 			var eventData = new CharacterCreated(
 				PlayerId: playerId,

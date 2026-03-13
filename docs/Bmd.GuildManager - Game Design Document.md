@@ -97,17 +97,25 @@ The tier scale used across the entire game (characters, items, quests) is:
 | Elite | 4 |
 | Legendary | 5 |
 
-Character Tier is calculated as:
+Character Tier is calculated by comparing the character's **TotalPower** against exponential thresholds defined in `GameConstants.TierTotalPowerThresholds`:
 
 ```
-Character Tier = sum of (tier numeric value of each equipped item) ÷ total equipment slots
+TotalPower = Strength + Luck + Endurance + (Level × 2) + sum of all equipment stat bonuses
+
+TierTotalPowerThresholds = [20, 40, 80, 160]
 ```
 
-The divisor is always **7** (total equipment slots), not the number of filled slots. A character with one Legendary item equipped and six empty slots is Novice-tier, not Legendary. Tier is rounded to the nearest integer and mapped back to the tier name.
+| TotalPower | Tier |
+| ---------- | ---- |
+| < 20 | Novice |
+| 20–39 | Apprentice |
+| 40–79 | Veteran |
+| 80–159 | Elite |
+| ≥ 160 | Legendary |
 
-A character with no items equipped has a tier of Novice (1).
+Each threshold doubles from the previous, mirroring the quest difficulty doubling pattern. A character with no items equipped is still classified based on their stats and level — a Level 1 character with minimum stats (3/3/3 = 9 base + 2 level = 11 TotalPower) starts as Novice.
 
-> `Character.CalculateTier()` should be implemented as a method on the `Character` model in `Bmd.GuildManager.Core`.
+> `Character.CalculateTier()` is implemented as a method on the `Character` model in `Bmd.GuildManager.Core`.
 
 ### Equipment Slots
 
@@ -200,7 +208,7 @@ Each quest has:
 
 ### Quest Generation and Availability
 
-Quests are procedurally generated. They are not a fixed list. At any given time, the system maintains a pool of available quests in the Quests Cosmos DB container. At least 2 quests must be available per tier at all times. A timer-triggered function is responsible for ensuring this minimum is maintained by generating new quests when supply falls below the threshold.
+Quests are procedurally generated. They are not a fixed list. At any given time, the system maintains a pool of available quests in the Quests Cosmos DB container. At least 3 quests must be available per tier at all times. A timer-triggered function is responsible for ensuring this minimum is maintained by generating new quests when supply falls below the threshold.
 
 Quests are a shared world resource. A quest in Available status can be claimed by any player. When a player starts a quest, its status transitions from Available to InProgress and it becomes associated with that player and their assigned characters. This transition must be protected by optimistic concurrency (ETag) to prevent two players from claiming the same quest simultaneously.
 

@@ -8,6 +8,7 @@ public record Player(
 	[property: JsonPropertyName("guildName")]      string GuildName,
 	[property: JsonPropertyName("gold")]           int Gold,
 	[property: JsonPropertyName("createdDate")]    DateTime CreatedDate,
+	[property: JsonPropertyName("onboardedAt")]    DateTime? OnboardedAt,
 	[property: JsonPropertyName("idempotencyKey")] string? IdempotencyKey,
 	[property: JsonPropertyName("stash")]          IReadOnlyList<Item> Stash)
 {
@@ -20,6 +21,7 @@ public record Player(
 			GuildName:      guildName,
 			Gold:           0,
 			CreatedDate:    DateTime.UtcNow,
+			OnboardedAt:    null,
 			IdempotencyKey: idempotencyKey,
 			Stash:          []);
 	}

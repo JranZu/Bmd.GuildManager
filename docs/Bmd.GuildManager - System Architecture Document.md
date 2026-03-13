@@ -1,4 +1,4 @@
-﻿# System Architecture Document
+# System Architecture Document
 
 ## Project: Guild Manager
 
@@ -146,6 +146,12 @@ population-events
 notification-events
 ```
 
+Queues:
+
+```
+quest-completed    (receives scheduled QuestCompleted messages from StartQuestFunction)
+```
+
 Key feature used heavily:
 
 **Scheduled Messages**
@@ -170,6 +176,7 @@ Players
 Characters
 MarketListings
 WorldPopulation
+WorldNews
 Events
 Quests
 ```
@@ -235,6 +242,8 @@ PlayerId
 GuildName
 Gold
 CreatedDate
+OnboardedAt  (nullable datetime - set when onboarding completes; null if not yet onboarded)
+idempotencyKey  (nullable string)
 stash  (array of StashedItem, max 50)
 ```
 
@@ -260,6 +269,7 @@ equipment  (array of equipped Item — max 7 entries, one per slot)
 activeQuestSnapshot (nullable)
   questId
   name
+  description
   tier
   estimatedCompletionAt
 ```
@@ -295,6 +305,7 @@ id
 questId
 name
 description
+questType
 tier (Novice / Apprentice / Veteran / Elite / Legendary)
 difficultyRating
 durationSeconds
@@ -302,7 +313,8 @@ requiredAdventurers
 riskLevel (Low / Medium / High)
 status (Available / InProgress — operational; CriticalSuccess / Success / Failure / CatastrophicFailure — terminal, Blob archive only)
 playerId (nullable)
-characterIds (nullable)
+assignedCharacterIds (nullable)
+createdAt
 startedAt (nullable)
 estimatedCompletionAt (nullable)
 `
@@ -398,10 +410,27 @@ QuestCompleted event received
 → calculate success/failure
 → death probability evaluated
 → QuestResolved event published
-→ LootGenerated event published (if loot awarded)
-→ GoldCredited event published (if gold awarded)
-→ CharacterDied event published (if death occurred)
-→ player notified via NotificationFunction
+→ quest archived to Blob Storage, deleted from Cosmos DB
+```
+
+Downstream consumers react to QuestResolved independently:
+
+```
+HandleQuestResolvedFunction
+→ apply XP to surviving characters
+→ set survivors to Idle, clear ActiveQuestSnapshot
+→ publish CharacterDied (per character, if death occurred)
+
+GenerateLootFunction (if lootEligible)
+→ procedurally generate item
+→ publish LootGenerated
+
+GoldTransactionFunction (if goldAwarded > 0)
+→ credit gold to guild balance
+→ publish GoldCredited
+
+NotificationFunction
+→ push quest result to player via SignalR
 ```
 
 ---
@@ -538,6 +567,8 @@ The system enforces domain invariants to prevent conflicting state transitions.
 State mutations use **Cosmos DB optimistic concurrency** with ETags.
 
 Each write includes the document ETag. If a conflicting update has occurred, the write fails and the operation is retried or rejected.
+
+All mutable repositories (`IPlayerRepository`, `ICharacterRepository`, `IQuestRepository`) follow the same pattern: `FindBy*Async` returns a `CosmosDocument<T>` containing both the document and its ETag, and `UpdateAsync` accepts the ETag for the `IfMatchEtag` header.
 
 This pattern prevents race conditions in concurrent workflows such as simultaneous quest starts or market sales.
 

@@ -13,11 +13,11 @@ using Microsoft.Extensions.Logging;
 namespace Bmd.GuildManager.Functions.Functions;
 
 public class StartQuestFunction(
-    IQuestRepository questRepository,
-    ICharacterRepository characterRepository,
-	[FromKeyedServices("player-events")] IEventPublisher eventPublisher,
-    IMessageScheduler messageScheduler,
-    ILogger<StartQuestFunction> logger)
+	IQuestRepository questRepository,
+	ICharacterRepository characterRepository,
+	[FromKeyedServices("quest-events")] IEventPublisher eventPublisher,
+	IMessageScheduler messageScheduler,
+	ILogger<StartQuestFunction> logger)
 {
     private const string QuestCompletedQueue = "quest-completed";
 

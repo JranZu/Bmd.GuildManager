@@ -112,7 +112,10 @@ sequenceDiagram
 participant Player
 participant API as StartQuestFunction
 participant SB as Service Bus
-participant Worker as ResolveQuestFunction
+participant Resolver as ResolveQuestFunction
+participant CharHandler as HandleQuestResolvedFunction
+participant LootGen as GenerateLootFunction
+participant GoldSvc as GoldTransactionFunction
 participant DB as Cosmos DB
 participant Notify as Notification Function
 participant SignalR as Azure SignalR
@@ -122,24 +125,32 @@ API->>DB: Update Character Status
 API->>SB: Publish QuestStarted
 API->>SB: Schedule QuestCompleted (delay)
 
-SB-->>Worker: QuestCompleted Message
+SB-->>Resolver: QuestCompleted Message
 
-Worker->>DB: Resolve Quest
-Worker->>SB: Publish QuestResolved
-Worker->>SB: Publish LootGenerated (if loot)
-Worker->>SB: Publish CharacterDied (if death)
-Worker->>SB: Publish GoldCredited (if gold)
+Resolver->>DB: Resolve Quest
+Resolver->>SB: Publish QuestResolved
+
+SB-->>CharHandler: QuestResolved Message
+CharHandler->>DB: Apply XP, set survivors Idle, clear ActiveQuestSnapshot
+CharHandler->>SB: Publish CharacterDied (per character, if death)
+
+SB-->>LootGen: QuestResolved Message (if lootEligible)
+LootGen->>SB: Publish LootGenerated
+
+SB-->>GoldSvc: QuestResolved Message (if goldAwarded > 0)
+GoldSvc->>DB: Credit Gold
+GoldSvc->>SB: Publish GoldCredited
 
 SB-->>Notify: QuestResolved Message
 Notify->>SignalR: Push Notification
 SignalR-->>Player: Quest Result
 ```
 
-Key architectural concept:
+Key architectural concepts:
 
 Service Bus **scheduled messages** replace background timers.
 
-The **QuestResolved** event captures the full outcome and triggers downstream effects.
+The **QuestResolved** event is the single resolution event. Downstream consumers (`HandleQuestResolvedFunction`, `GenerateLootFunction`, `GoldTransactionFunction`) each react to `QuestResolved` independently.
 
 ---
 
@@ -181,28 +192,32 @@ The onboarding flow provisions a new player's guild, starter characters, and sta
 ```mermaid
 flowchart LR
 
-A[QuestCompleted]
+A[QuestResolved\nlootEligible: true]
 
-B[LootRolled]
+B[GenerateLootFunction]
 
-C[RarityCalculated]
+C[Roll Rarity]
 
-D[StatsGenerated]
+D[Generate Stats]
 
-E[ItemNamed]
+E[Generate Name]
 
-F[InventoryUpdated]
+F[Publish LootGenerated]
+
+G[HandleLootGeneratedFunction]
+
+H[ItemAddedToInventory]
 
 A --> B
 B --> C
 C --> D
 D --> E
 E --> F
+F --> G
+G --> H
 ```
 
-Each stage can be implemented as a **separate Azure Function triggered by events**.
-
-This demonstrates event driven pipelines.
+`GenerateLootFunction` consumes `QuestResolved` when `lootEligible` is true. It procedurally generates an item (rarity, stats, name) and publishes `LootGenerated`. The downstream `HandleLootGeneratedFunction` appends the item to `Player.stash` and publishes `ItemAddedToInventory`.
 
 ---
 
@@ -383,9 +398,9 @@ G[Catastrophic Failure]
 
 H[Publish QuestResolved]
 
-I[Publish LootGenerated]
-J[Publish GoldCredited]
-K[Publish CharacterDied]
+I[Publish LootGenerated\nif lootEligible]
+J[Publish GoldCredited\nCriticalSuccess / Success only]
+K[Publish CharacterDied\nper character death probability]
 
 L[Notify Player]
 
@@ -404,7 +419,7 @@ G --> H
 
 H --> I
 H --> J
-G --> K
+H --> K
 
 I --> L
 J --> L
@@ -412,6 +427,8 @@ K --> L
 ```
 
 The quest resolution evaluates outcomes and publishes appropriate downstream events based on the result.
+
+Character death is evaluated independently per character for every outcome type (CriticalSuccess 1%, Success 2%, Failure 20%, CatastrophicFailure 60% — see GDD §6). Loot is only generated when `lootEligible` is true. Gold is only awarded for CriticalSuccess and Success outcomes.
 
 ---
 

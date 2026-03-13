@@ -6,9 +6,9 @@ public interface IPlayerRepository
 {
 	Task CreateAsync(Player player);
 
-	Task UpdateAsync(Player player);
+	Task UpdateAsync(Player player, string etag);
 
 	Task<Player?> FindByIdempotencyKeyAsync(string idempotencyKey);
 
-	Task<Player?> FindByPlayerIdAsync(Guid playerId);
+	Task<CosmosDocument<Player>?> FindByPlayerIdAsync(Guid playerId);
 }

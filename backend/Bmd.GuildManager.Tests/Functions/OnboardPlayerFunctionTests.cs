@@ -35,6 +35,7 @@ public class OnboardPlayerFunctionTests
 		await function.RunAsync(message);
 
 		Assert.Equal(500, repository.Players[0].Gold);
+		Assert.NotNull(repository.Players[0].OnboardedAt);
 		Assert.Equal(3, publisher.Published.Count);
 		Assert.Equal("GuildCreated", publisher.Published[0].EventType);
 		Assert.Equal("StarterCharactersGranted", publisher.Published[1].EventType);
@@ -44,7 +45,7 @@ public class OnboardPlayerFunctionTests
 	[Fact]
 	public async Task RunAsync_AlreadyOnboarded_PublishesNoEvents()
 	{
-		var player = Player.Create("Test Guild") with { Gold = 500 };
+		var player = Player.Create("Test Guild") with { OnboardedAt = DateTime.UtcNow };
 		var repository = new FakePlayerRepository();
 		repository.Players.Add(player);
 
@@ -55,7 +56,6 @@ public class OnboardPlayerFunctionTests
 		await function.RunAsync(message);
 
 		Assert.Empty(publisher.Published);
-		Assert.Equal(500, repository.Players[0].Gold);
 	}
 
 	[Fact]

@@ -110,12 +110,25 @@ public class QuestResolutionService(IRandomProvider random)
 
     /// <summary>
     /// Calculates gold awarded. Failure/CatastrophicFailure yield zero.
-    /// Success/CriticalSuccess roll within a tier-based range.
+    /// Success rolls within a tier-based range.
+    /// CriticalSuccess applies the overage multiplier (capped at 2×) to the
+    /// midpoint of the Success range, then jitters within the tier's CriticalSuccess range.
     /// </summary>
     public int CalculateGoldAwarded(QuestStatus outcome, DifficultyTier questTier, double teamPowerRatio)
     {
         if (outcome is QuestStatus.Failure or QuestStatus.CatastrophicFailure)
             return 0;
+
+        if (outcome == QuestStatus.CriticalSuccess)
+        {
+            var (successMin, successMax) = GetGoldRange(questTier, QuestStatus.Success);
+            var baseGold = (successMin + successMax) / 2.0;
+            var overageMultiplier = Math.Min(teamPowerRatio, GameConstants.OverageMultiplierCap);
+            var scaled = (int)Math.Round(baseGold * overageMultiplier);
+
+            var (critMin, critMax) = GetGoldRange(questTier, QuestStatus.CriticalSuccess);
+            return Math.Clamp(scaled, critMin, critMax);
+        }
 
         var (minGold, maxGold) = GetGoldRange(questTier, outcome);
         return random.NextInt(minGold, maxGold + 1);
