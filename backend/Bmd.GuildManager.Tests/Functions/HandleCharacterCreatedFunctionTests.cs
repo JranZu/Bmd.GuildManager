@@ -31,7 +31,7 @@ public class HandleCharacterCreatedFunctionTests
 
         var playerId = Guid.NewGuid();
         var characterId = Guid.NewGuid();
-        await function.RunAsync(BuildMessage(playerId, characterId));
+        await function.RunAsync(BuildMessage(playerId, characterId), TestContext.Current.CancellationToken);
 
         Assert.Single(repository.Characters);
         var character = repository.Characters[0];
@@ -55,8 +55,8 @@ public class HandleCharacterCreatedFunctionTests
         var characterId = Guid.NewGuid();
         var message = BuildMessage(playerId, characterId);
 
-        await function.RunAsync(message);
-        await function.RunAsync(message);
+        await function.RunAsync(message, TestContext.Current.CancellationToken);
+        await function.RunAsync(message, TestContext.Current.CancellationToken);
 
         Assert.Single(repository.Characters);
     }
@@ -69,7 +69,7 @@ public class HandleCharacterCreatedFunctionTests
             repository,
             NullLogger<HandleCharacterCreatedFunction>.Instance);
 
-        await function.RunAsync("this is not json");
+        await function.RunAsync("this is not json", TestContext.Current.CancellationToken);
 
         Assert.Empty(repository.Characters);
     }
@@ -82,7 +82,7 @@ public class HandleCharacterCreatedFunctionTests
             repository,
             NullLogger<HandleCharacterCreatedFunction>.Instance);
 
-        await function.RunAsync(BuildMessage(Guid.NewGuid(), Guid.NewGuid()));
+        await function.RunAsync(BuildMessage(Guid.NewGuid(), Guid.NewGuid()), TestContext.Current.CancellationToken);
 
         Assert.Equal(CharacterStatus.Idle, repository.Characters[0].Status);
     }

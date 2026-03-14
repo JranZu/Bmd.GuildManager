@@ -16,7 +16,8 @@ public class HandleCharacterCreatedFunction(
 	public async Task RunAsync(
 		[ServiceBusTrigger("player-events", "character-created-sub",
 			Connection = "ServiceBusConnectionString")]
-		string message)
+		string message,
+		CancellationToken cancellationToken = default)
 	{
 		EventEnvelope<CharacterCreated>? envelope;
 		try
@@ -45,7 +46,7 @@ public class HandleCharacterCreatedFunction(
 			data.PlayerId);
 
 		var existing = await characterRepository
-			.FindByCharacterIdAsync(data.CharacterId, data.PlayerId);
+			.FindByCharacterIdAsync(data.CharacterId, data.PlayerId, cancellationToken);
 
 		if (existing is not null)
 		{
@@ -64,7 +65,7 @@ public class HandleCharacterCreatedFunction(
 			data.Luck,
 			data.Endurance);
 
-		await characterRepository.CreateAsync(character);
+		await characterRepository.CreateAsync(character, cancellationToken);
 
 		logger.LogInformation(
 			"Character {CharacterId} persisted for player {PlayerId}",
