@@ -3,16 +3,12 @@ using Bmd.GuildManager.Core.Models;
 using Bmd.GuildManager.Functions.Functions;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Text.Json;
+using Bmd.GuildManager.Functions.Serialization;
 
 namespace Bmd.GuildManager.Tests.Functions;
 
 public class HandleQuestResolvedFunctionTests
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     private static Character BuildOnQuestCharacter(Guid playerId, Guid questId) =>
         Character.Create(playerId, "Hero", level: 1, strength: 5, luck: 5, endurance: 5) with
         {
@@ -33,7 +29,7 @@ public class HandleQuestResolvedFunctionTests
             xpAwarded, characters, true, 20);
         var envelope = EventEnvelope<QuestResolved>.Create(
             "test", Guid.NewGuid(), payload);
-        return JsonSerializer.Serialize(envelope, JsonOptions);
+        return JsonSerializer.Serialize(envelope, FunctionJsonOptions.Default);
     }
 
     [Fact]

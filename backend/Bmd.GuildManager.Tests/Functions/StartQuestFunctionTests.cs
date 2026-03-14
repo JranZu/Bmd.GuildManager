@@ -1,4 +1,4 @@
-﻿using Bmd.GuildManager.Core.Events;
+using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
 using Bmd.GuildManager.Functions.Functions;
 using Microsoft.AspNetCore.Http;
@@ -6,16 +6,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Text;
 using System.Text.Json;
+using Bmd.GuildManager.Functions.Serialization;
 
 namespace Bmd.GuildManager.Tests.Functions;
 
 public class StartQuestFunctionTests
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     // --- Builder helpers ---
 
     private static Quest BuildAvailableQuest(
@@ -54,7 +50,7 @@ public class StartQuestFunctionTests
 
     private static HttpRequest BuildRequest(object body)
     {
-        var json = JsonSerializer.Serialize(body, JsonOptions);
+        var json = JsonSerializer.Serialize(body, FunctionJsonOptions.Default);
         var context = new DefaultHttpContext();
         context.Request.ContentType = "application/json";
         context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -281,7 +277,7 @@ public class StartQuestFunctionTests
         // Extract correlationId from the scheduled QuestCompleted message body
         var scheduledBody = scheduler.Scheduled[0].MessageBody;
         var scheduledEnvelope = JsonSerializer
-            .Deserialize<EventEnvelope<QuestCompleted>>(scheduledBody, JsonOptions);
+            .Deserialize<EventEnvelope<QuestCompleted>>(scheduledBody, FunctionJsonOptions.Default);
 
         Assert.NotNull(scheduledEnvelope);
         Assert.Equal(publishedCorrelationId, scheduledEnvelope.CorrelationId);

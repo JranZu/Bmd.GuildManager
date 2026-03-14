@@ -249,8 +249,7 @@ Triggered by a scheduled Service Bus message.
   "eventType": "QuestCompleted",
   "data": {
     "questId": "guid",
-    "playerId": "guid",
-    "success": true
+    "playerId": "guid"
   }
 }
 ```

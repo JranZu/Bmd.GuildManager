@@ -23,23 +23,8 @@ public record Character(
 		int level,
 		int strength,
 		int luck,
-		int endurance)
-	{
-		var characterId = Guid.NewGuid();
-		return new Character(
-			Id:                   characterId.ToString(),
-			CharacterId:          characterId,
-			PlayerId:             playerId,
-			Name:                 name,
-			Level:                level,
-			Strength:             strength,
-			Luck:                 luck,
-			Endurance:            endurance,
-			Status:               CharacterStatus.Idle,
-			Equipment:            [],
-			Xp:                   0,
-			ActiveQuestSnapshot:  null);
-	}
+		int endurance) =>
+		CreateWithId(Guid.NewGuid(), playerId, name, level, strength, luck, endurance);
 
 	public static Character CreateWithId(
 	Guid characterId,

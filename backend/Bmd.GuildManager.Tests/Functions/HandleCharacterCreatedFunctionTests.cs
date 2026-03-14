@@ -3,22 +3,18 @@ using Bmd.GuildManager.Core.Models;
 using Bmd.GuildManager.Functions.Functions;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Text.Json;
+using Bmd.GuildManager.Functions.Serialization;
 
 namespace Bmd.GuildManager.Tests.Functions;
 
 public class HandleCharacterCreatedFunctionTests
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     private static string BuildMessage(Guid playerId, Guid characterId, string name = "Aldric")
     {
         var payload = new CharacterCreated(playerId, characterId, name, 1, 8, 6, 7);
         var envelope = EventEnvelope<CharacterCreated>.Create(
             "test", playerId, payload);
-        return JsonSerializer.Serialize(envelope, JsonOptions);
+        return JsonSerializer.Serialize(envelope, FunctionJsonOptions.Default);
     }
 
     [Fact]

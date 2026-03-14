@@ -7,19 +7,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Text;
 using System.Text.Json;
+using Bmd.GuildManager.Functions.Serialization;
 
 namespace Bmd.GuildManager.Tests.Functions;
 
 public class CreatePlayerFunctionTests
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     private static HttpRequest BuildRequest(object body, string? idempotencyKey = null)
     {
-        var json = JsonSerializer.Serialize(body, JsonOptions);
+        var json = JsonSerializer.Serialize(body, FunctionJsonOptions.Default);
         var context = new DefaultHttpContext();
         context.Request.ContentType = "application/json";
         context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(json));

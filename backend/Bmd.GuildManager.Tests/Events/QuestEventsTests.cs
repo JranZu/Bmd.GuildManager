@@ -1,16 +1,12 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
+using Bmd.GuildManager.Functions.Serialization;
 
 namespace Bmd.GuildManager.Tests.Events;
 
 public class QuestEventsTests
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     [Fact]
     public void QuestStarted_RoundTrip()
     {
@@ -25,8 +21,8 @@ public class QuestEventsTests
             estimatedCompletionAt);
         var envelope = EventEnvelope<QuestStarted>.Create("quest-service", Guid.NewGuid(), payload);
 
-        var json = JsonSerializer.Serialize(envelope, JsonOptions);
-        var result = JsonSerializer.Deserialize<EventEnvelope<QuestStarted>>(json, JsonOptions);
+        var json = JsonSerializer.Serialize(envelope, FunctionJsonOptions.Default);
+        var result = JsonSerializer.Deserialize<EventEnvelope<QuestStarted>>(json, FunctionJsonOptions.Default);
 
         Assert.NotNull(result);
         Assert.Equal("QuestStarted", result.EventType);
@@ -40,11 +36,11 @@ public class QuestEventsTests
     [Fact]
     public void QuestCompleted_RoundTrip()
     {
-        var payload = new QuestCompleted(Guid.NewGuid(), Guid.NewGuid(), true);
+        var payload = new QuestCompleted(Guid.NewGuid(), Guid.NewGuid());
         var envelope = EventEnvelope<QuestCompleted>.Create("quest-service", Guid.NewGuid(), payload);
 
-        var json = JsonSerializer.Serialize(envelope, JsonOptions);
-        var result = JsonSerializer.Deserialize<EventEnvelope<QuestCompleted>>(json, JsonOptions);
+        var json = JsonSerializer.Serialize(envelope, FunctionJsonOptions.Default);
+        var result = JsonSerializer.Deserialize<EventEnvelope<QuestCompleted>>(json, FunctionJsonOptions.Default);
 
         Assert.NotNull(result);
         Assert.Equal("QuestCompleted", result.EventType);
@@ -70,8 +66,8 @@ public class QuestEventsTests
             22);
         var envelope = EventEnvelope<QuestResolved>.Create("quest-service", Guid.NewGuid(), payload);
 
-        var json = JsonSerializer.Serialize(envelope, JsonOptions);
-        var result = JsonSerializer.Deserialize<EventEnvelope<QuestResolved>>(json, JsonOptions);
+        var json = JsonSerializer.Serialize(envelope, FunctionJsonOptions.Default);
+        var result = JsonSerializer.Deserialize<EventEnvelope<QuestResolved>>(json, FunctionJsonOptions.Default);
 
         Assert.NotNull(result);
         Assert.Equal("QuestResolved", result.EventType);

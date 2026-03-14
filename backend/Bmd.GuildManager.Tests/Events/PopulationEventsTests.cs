@@ -1,23 +1,19 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Bmd.GuildManager.Core.Events;
+using Bmd.GuildManager.Functions.Serialization;
 
 namespace Bmd.GuildManager.Tests.Events;
 
 public class PopulationEventsTests
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     [Fact]
     public void PopulationUpdateScheduled_RoundTrip()
     {
         var payload = new PopulationUpdateScheduled(DateTimeOffset.UtcNow);
         var envelope = EventEnvelope<PopulationUpdateScheduled>.Create("population-service", Guid.NewGuid(), payload);
 
-        var json = JsonSerializer.Serialize(envelope, JsonOptions);
-        var result = JsonSerializer.Deserialize<EventEnvelope<PopulationUpdateScheduled>>(json, JsonOptions);
+        var json = JsonSerializer.Serialize(envelope, FunctionJsonOptions.Default);
+        var result = JsonSerializer.Deserialize<EventEnvelope<PopulationUpdateScheduled>>(json, FunctionJsonOptions.Default);
 
         Assert.NotNull(result);
         Assert.Equal("PopulationUpdateScheduled", result.EventType);
@@ -30,8 +26,8 @@ public class PopulationEventsTests
         var payload = new PopulationUpdated(1000, 500, 200, 50, 10);
         var envelope = EventEnvelope<PopulationUpdated>.Create("population-service", Guid.NewGuid(), payload);
 
-        var json = JsonSerializer.Serialize(envelope, JsonOptions);
-        var result = JsonSerializer.Deserialize<EventEnvelope<PopulationUpdated>>(json, JsonOptions);
+        var json = JsonSerializer.Serialize(envelope, FunctionJsonOptions.Default);
+        var result = JsonSerializer.Deserialize<EventEnvelope<PopulationUpdated>>(json, FunctionJsonOptions.Default);
 
         Assert.NotNull(result);
         Assert.Equal("PopulationUpdated", result.EventType);
@@ -48,8 +44,8 @@ public class PopulationEventsTests
         var payload = new PlayerEventOccurred(Guid.NewGuid(), "QuestCompleted");
         var envelope = EventEnvelope<PlayerEventOccurred>.Create("population-service", Guid.NewGuid(), payload);
 
-        var json = JsonSerializer.Serialize(envelope, JsonOptions);
-        var result = JsonSerializer.Deserialize<EventEnvelope<PlayerEventOccurred>>(json, JsonOptions);
+        var json = JsonSerializer.Serialize(envelope, FunctionJsonOptions.Default);
+        var result = JsonSerializer.Deserialize<EventEnvelope<PlayerEventOccurred>>(json, FunctionJsonOptions.Default);
 
         Assert.NotNull(result);
         Assert.Equal("PlayerEventOccurred", result.EventType);

@@ -1,15 +1,11 @@
 ﻿using System.Text.Json;
 using Bmd.GuildManager.Core.Events;
+using Bmd.GuildManager.Functions.Serialization;
 
 namespace Bmd.GuildManager.Tests.Events;
 
 public class EventEnvelopeTests
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     private record SamplePayload(string QuestName, int Difficulty);
 
     [Fact]
@@ -20,8 +16,8 @@ public class EventEnvelopeTests
 
         var envelope = EventEnvelope<SamplePayload>.Create("quest-service", correlationId, payload);
 
-        var json = JsonSerializer.Serialize(envelope, JsonOptions);
-        var deserialized = JsonSerializer.Deserialize<EventEnvelope<SamplePayload>>(json, JsonOptions);
+        var json = JsonSerializer.Serialize(envelope, FunctionJsonOptions.Default);
+        var deserialized = JsonSerializer.Deserialize<EventEnvelope<SamplePayload>>(json, FunctionJsonOptions.Default);
 
         Assert.NotNull(deserialized);
         Assert.Equal(envelope.EventId, deserialized.EventId);
@@ -41,7 +37,7 @@ public class EventEnvelopeTests
             Guid.NewGuid(),
             new SamplePayload("Dragon Hunt", 5));
 
-        var json = JsonSerializer.Serialize(envelope, JsonOptions);
+        var json = JsonSerializer.Serialize(envelope, FunctionJsonOptions.Default);
 
         Assert.Contains("\"eventId\"", json);
         Assert.Contains("\"eventType\"", json);

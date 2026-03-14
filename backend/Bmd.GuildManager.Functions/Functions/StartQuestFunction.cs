@@ -206,8 +206,7 @@ public class StartQuestFunction(
         // is traceable end-to-end in Application Insights.
         var questCompleted = new QuestCompleted(
             QuestId: quest.QuestId,
-            PlayerId: request.PlayerId,
-            Success: true);
+            PlayerId: request.PlayerId);
 
         var completedEnvelope = EventEnvelope<QuestCompleted>.Create(
             source: "StartQuestFunction",

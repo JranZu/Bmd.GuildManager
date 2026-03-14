@@ -29,6 +29,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>Bmd.GuildManager.Tests</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Include="HttpTests\http-client.env.json.template" />
 		<None Include="HttpTests\players.http" />
 		<None Include="HttpTests\quests.http" />

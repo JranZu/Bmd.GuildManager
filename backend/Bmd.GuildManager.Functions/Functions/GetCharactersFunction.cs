@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Bmd.GuildManager.Core.Abstractions;
+﻿using Bmd.GuildManager.Core.Abstractions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;

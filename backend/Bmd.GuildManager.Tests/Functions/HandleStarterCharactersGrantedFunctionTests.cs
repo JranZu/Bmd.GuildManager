@@ -2,22 +2,18 @@
 using Bmd.GuildManager.Functions.Functions;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Text.Json;
+using Bmd.GuildManager.Functions.Serialization;
 
 namespace Bmd.GuildManager.Tests.Functions;
 
 public class HandleStarterCharactersGrantedFunctionTests
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     private static string BuildMessage(Guid playerId, IReadOnlyList<Guid> characterIds)
     {
         var payload = new StarterCharactersGranted(playerId, characterIds);
         var envelope = EventEnvelope<StarterCharactersGranted>.Create(
             "test", playerId, payload);
-        return JsonSerializer.Serialize(envelope, JsonOptions);
+        return JsonSerializer.Serialize(envelope, FunctionJsonOptions.Default);
     }
 
     [Fact]

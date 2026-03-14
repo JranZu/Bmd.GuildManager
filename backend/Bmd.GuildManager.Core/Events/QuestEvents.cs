@@ -14,8 +14,7 @@ public record QuestStarted(
 
 public record QuestCompleted(
     [property: JsonPropertyName("questId")] Guid QuestId,
-    [property: JsonPropertyName("playerId")] Guid PlayerId,
-    [property: JsonPropertyName("success")] bool Success);
+    [property: JsonPropertyName("playerId")] Guid PlayerId);
 
 public record QuestResolved(
     [property: JsonPropertyName("questId")] Guid QuestId,
