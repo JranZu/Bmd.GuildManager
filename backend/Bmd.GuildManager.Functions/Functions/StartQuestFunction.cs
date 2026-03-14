@@ -16,12 +16,10 @@ namespace Bmd.GuildManager.Functions.Functions;
 public class StartQuestFunction(
 	IQuestRepository questRepository,
 	ICharacterRepository characterRepository,
-	[FromKeyedServices("quest-events")] IEventPublisher eventPublisher,
+	[FromKeyedServices(ServiceBusConstants.QuestEventsTopic)] IEventPublisher eventPublisher,
 	IMessageScheduler messageScheduler,
 	ILogger<StartQuestFunction> logger)
 {
-    private const string QuestCompletedQueue = "quest-completed";
-
     [Function("StartQuest")]
     public async Task<IActionResult> RunAsync(
         [HttpTrigger(AuthorizationLevel.Function, "post",
@@ -68,13 +66,19 @@ public class StartQuestFunction(
 
         var quest = questDoc.Document;
 
-        // --- 3. Load and validate all characters upfront ---
+        // --- 3. Load all characters in parallel ---
+        var charDocTasks = request.CharacterIds
+            .Select(id => characterRepository.FindByCharacterIdAsync(id, request.PlayerId, ct))
+            .ToList();
+
+        var charDocs = await Task.WhenAll(charDocTasks);
+
         var characters = new List<(Character Character, string ETag)>();
 
-        foreach (var characterId in request.CharacterIds)
+        for (var i = 0; i < request.CharacterIds.Count; i++)
         {
-            var charDoc = await characterRepository
-                .FindByCharacterIdAsync(characterId, request.PlayerId, ct);
+            var characterId = request.CharacterIds[i];
+            var charDoc = charDocs[i];
 
             if (charDoc is null)
             {
@@ -224,14 +228,14 @@ public class StartQuestFunction(
         var messageBody = JsonSerializer.Serialize(completedEnvelope, FunctionJsonOptions.Default);
 
         await messageScheduler.ScheduleMessageAsync(
-            QuestCompletedQueue,
+            ServiceBusConstants.QuestCompletedQueue,
             messageBody,
             estimatedCompletionAt,
             ct);
 
         logger.LogInformation(
             "QuestCompleted message scheduled for {Time} on queue {Queue}",
-            estimatedCompletionAt, QuestCompletedQueue);
+            estimatedCompletionAt, ServiceBusConstants.QuestCompletedQueue);
 
         // --- 10. Return 202 ---
         return new ObjectResult(new { questId = quest.QuestId })

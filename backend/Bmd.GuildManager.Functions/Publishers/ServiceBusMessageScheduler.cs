@@ -1,10 +1,13 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Bmd.GuildManager.Core.Abstractions;
+using System.Collections.Concurrent;
 
 namespace Bmd.GuildManager.Functions.Publishers;
 
-public class ServiceBusMessageScheduler(ServiceBusClient serviceBusClient) : IMessageScheduler
+public class ServiceBusMessageScheduler(ServiceBusClient serviceBusClient) : IMessageScheduler, IAsyncDisposable
 {
+    private readonly ConcurrentDictionary<string, ServiceBusSender> _senders = new();
+
     public async Task ScheduleMessageAsync(
         string queueOrTopicName,
         string messageBody,
@@ -17,7 +20,18 @@ public class ServiceBusMessageScheduler(ServiceBusClient serviceBusClient) : IMe
             ContentType = "application/json"
         };
 
-        await using var sender = serviceBusClient.CreateSender(queueOrTopicName);
+        var sender = _senders.GetOrAdd(queueOrTopicName, serviceBusClient.CreateSender);
         await sender.SendMessageAsync(message, cancellationToken);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        foreach (var sender in _senders.Values)
+        {
+            await sender.DisposeAsync();
+        }
+
+        _senders.Clear();
+        GC.SuppressFinalize(this);
     }
 }

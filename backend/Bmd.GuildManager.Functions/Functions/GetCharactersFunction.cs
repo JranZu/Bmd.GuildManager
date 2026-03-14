@@ -18,6 +18,11 @@ public class GetCharactersFunction(
 	{
 		var ct = req.HttpContext.RequestAborted;
 
+		if (playerId == Guid.Empty)
+		{
+			return new BadRequestObjectResult("playerId must not be empty.");
+		}
+
 		logger.LogInformation(
 			"GetCharacters called for player {PlayerId}", playerId);
 

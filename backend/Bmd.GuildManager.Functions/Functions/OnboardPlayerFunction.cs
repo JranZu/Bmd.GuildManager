@@ -12,12 +12,12 @@ namespace Bmd.GuildManager.Functions.Functions;
 
 public class OnboardPlayerFunction(
 	IPlayerRepository playerRepository,
-	[FromKeyedServices("player-events")] IEventPublisher eventPublisher,
+	[FromKeyedServices(ServiceBusConstants.PlayerEventsTopic)] IEventPublisher eventPublisher,
 	ILogger<OnboardPlayerFunction> logger)
 {
 	[Function("OnboardPlayer")]
 	public async Task RunAsync(
-		[ServiceBusTrigger("player-events", "onboarding-sub", Connection = "ServiceBusConnectionString")]
+		[ServiceBusTrigger(ServiceBusConstants.PlayerEventsTopic, ServiceBusConstants.OnboardingSubscription, Connection = "ServiceBusConnectionString")]
 		string message,
 		CancellationToken cancellationToken = default)
 	{
@@ -65,24 +65,10 @@ public class OnboardPlayerFunction(
 			return;
 		}
 
-		var updatedPlayer = player with { Gold = GameConstants.StartingGold, OnboardedAt = DateTimeOffset.UtcNow };
-
-		try
-		{
-			await playerRepository.UpdateAsync(updatedPlayer, playerDoc.ETag, cancellationToken);
-		}
-		catch (CosmosException ex)
-			when (ex.StatusCode == System.Net.HttpStatusCode.PreconditionFailed)
-		{
-			// ETag conflict — another process updated this player concurrently.
-			// Re-throwing lets Service Bus retry the message.
-			logger.LogWarning(
-				"ETag conflict updating player {PlayerId} during onboarding — will retry via Service Bus",
-				playerId);
-			throw;
-		}
-
-		logger.LogInformation("Guild provisioned with {startingGold} gold for player {PlayerId}", GameConstants.StartingGold, playerId);
+		// --- Publish all events BEFORE marking the player as onboarded ---
+		// If any publish fails, Service Bus retries the message. Because
+		// OnboardedAt is still null the idempotency guard above will let
+		// the retry through and re-publish all events from scratch.
 
 		var guildCreated = new GuildCreated(playerId, guildName, GameConstants.StartingGold);
 		var guildCreatedEnvelope = EventEnvelope<GuildCreated>.Create(
@@ -119,5 +105,25 @@ public class OnboardPlayerFunction(
 		await eventPublisher.PublishAsync(starterItemsEnvelope, cancellationToken);
 
 		logger.LogInformation("StarterItemsGranted event published for player {PlayerId}", playerId);
+
+		// --- Mark onboarded LAST — only after all events are confirmed ---
+		var updatedPlayer = player with { Gold = GameConstants.StartingGold, OnboardedAt = DateTimeOffset.UtcNow };
+
+		try
+		{
+			await playerRepository.UpdateAsync(updatedPlayer, playerDoc.ETag, cancellationToken);
+		}
+		catch (CosmosException ex)
+			when (ex.StatusCode == System.Net.HttpStatusCode.PreconditionFailed)
+		{
+			// ETag conflict — another process updated this player concurrently.
+			// Re-throwing lets Service Bus retry the message.
+			logger.LogWarning(
+				"ETag conflict updating player {PlayerId} during onboarding — will retry via Service Bus",
+				playerId);
+			throw;
+		}
+
+		logger.LogInformation("Guild provisioned with {StartingGold} gold for player {PlayerId}", GameConstants.StartingGold, playerId);
 	}
 }

@@ -30,11 +30,13 @@ public class QuestFactory
         var adventurers = _random.NextInt(minAdventurers, maxAdventurers + 1);
         var duration = _random.NextInt(minDuration, maxDuration + 1);
 
+        var words = _nameBuilder.SelectWords(tier, riskLevel);
+
         return new Quest(
             Id:                     questId.ToString(),
             QuestId:                questId,
-            Name:                   _nameBuilder.BuildName(tier, riskLevel, questType),
-            Description:            _nameBuilder.BuildDescription(tier, riskLevel, questType),
+            Name:                   _nameBuilder.BuildName(words, questType),
+            Description:            _nameBuilder.BuildDescription(words, questType),
             QuestType:              questType,
             Tier:                   tier,
             RiskLevel:              riskLevel,

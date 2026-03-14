@@ -75,4 +75,60 @@ public class OnboardPlayerFunctionTests
 
 		Assert.Empty(publisher.Published);
 	}
+
+	[Fact]
+	public async Task RunAsync_PublishFails_OnboardedAtRemainsNull()
+	{
+		var player = Player.Create("Test Guild");
+		var repository = new FakePlayerRepository();
+		repository.Players.Add(player);
+
+		var publisher = new FakeEventPublisher { FailOnPublish = true };
+		var function = new OnboardPlayerFunction(repository, publisher, NullLogger<OnboardPlayerFunction>.Instance);
+
+		var message = BuildMessage(player.PlayerId, player.GuildName);
+		await Assert.ThrowsAsync<InvalidOperationException>(
+			() => function.RunAsync(message, TestContext.Current.CancellationToken));
+
+		Assert.Null(repository.Players[0].OnboardedAt);
+	}
+
+	[Fact]
+	public async Task RunAsync_EventsPublishBeforeOnboardedAtIsSet()
+	{
+		var player = Player.Create("Test Guild");
+		var repository = new OrderTrackingPlayerRepository();
+		repository.Players.Add(player);
+
+		var publisher = new OrderTrackingEventPublisher(repository);
+		var function = new OnboardPlayerFunction(repository, publisher, NullLogger<OnboardPlayerFunction>.Instance);
+
+		var message = BuildMessage(player.PlayerId, player.GuildName);
+		await function.RunAsync(message, TestContext.Current.CancellationToken);
+
+		// All three events should have been published while OnboardedAt was still null
+		Assert.Equal(3, publisher.OnboardedAtDuringPublish.Count);
+		Assert.All(publisher.OnboardedAtDuringPublish, snapshot => Assert.Null(snapshot));
+	}
+
+	/// <summary>
+	/// Fake that records whether OnboardedAt was set at each publish call.
+	/// </summary>
+	private sealed class OrderTrackingEventPublisher(OrderTrackingPlayerRepository repository) : IEventPublisher
+	{
+		public List<DateTimeOffset?> OnboardedAtDuringPublish { get; } = [];
+
+		public Task PublishAsync<T>(EventEnvelope<T> envelope, CancellationToken cancellationToken = default)
+		{
+			// Snapshot the player's OnboardedAt at the moment of each publish
+			var player = repository.Players.First();
+			OnboardedAtDuringPublish.Add(player.OnboardedAt);
+			return Task.CompletedTask;
+		}
+	}
+
+	/// <summary>
+	/// A FakePlayerRepository subclass that supports order tracking.
+	/// </summary>
+	private sealed class OrderTrackingPlayerRepository : FakePlayerRepository;
 }

@@ -56,7 +56,6 @@ public record Character(
 		var newLevel = Level;
 
 		while (newLevel < GameConstants.MaxLevel &&
-			   newLevel - 1 < GameConstants.XpThresholds.Length &&
 			   newXp >= GameConstants.XpThresholds[newLevel - 1])
 		{
 			newLevel++;

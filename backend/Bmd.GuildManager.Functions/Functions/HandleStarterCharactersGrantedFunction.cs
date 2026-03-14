@@ -12,13 +12,13 @@ using Microsoft.Extensions.Logging;
 namespace Bmd.GuildManager.Functions.Functions;
 
 public class HandleStarterCharactersGrantedFunction(
-	[FromKeyedServices("player-events")] IEventPublisher eventPublisher,
+	[FromKeyedServices(ServiceBusConstants.PlayerEventsTopic)] IEventPublisher eventPublisher,
 	ILogger<HandleStarterCharactersGrantedFunction> logger,
 	IRandomProvider random)
 {
 	[Function("HandleStarterCharactersGranted")]
 	public async Task RunAsync(
-		[ServiceBusTrigger("player-events", "starter-characters-sub",
+		[ServiceBusTrigger(ServiceBusConstants.PlayerEventsTopic, ServiceBusConstants.StarterCharactersSubscription,
 			Connection = "ServiceBusConnectionString")]
 		string message,
 		CancellationToken cancellationToken = default)

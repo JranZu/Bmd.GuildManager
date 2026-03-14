@@ -3,16 +3,35 @@ using Bmd.GuildManager.Core.Models;
 
 namespace Bmd.GuildManager.Core.Services;
 
+/// <summary>
+/// Pre-selected word choices shared between name and description generation
+/// to ensure internal consistency within a single quest.
+/// </summary>
+public record QuestWordSelection(
+    string Location,
+    string Adjective,
+    string Creature,
+    string Material);
+
 public class QuestNameBuilder(IRandomProvider random)
 {
     private readonly IRandomProvider _random = random;
 
-    internal string BuildName(DifficultyTier tier, RiskLevel riskLevel, QuestType questType)
+    /// <summary>
+    /// Picks one word from each pool for the given tier/risk so that
+    /// <see cref="BuildName"/> and <see cref="BuildDescription"/> reference
+    /// the same location, adjective, creature, and material.
+    /// </summary>
+    internal QuestWordSelection SelectWords(DifficultyTier tier, RiskLevel riskLevel) =>
+        new(
+            Location:  Pick(QuestWordPools.LocationsForTier(tier)),
+            Adjective: Pick(QuestWordPools.AdjectivesForRisk(riskLevel)),
+            Creature:  Pick(QuestWordPools.CreaturesForTier(tier)),
+            Material:  Pick(QuestWordPools.MaterialsForTier(tier)));
+
+    internal string BuildName(QuestWordSelection words, QuestType questType)
     {
-        var location = Pick(QuestWordPools.LocationsForTier(tier));
-        var adjective = Pick(QuestWordPools.AdjectivesForRisk(riskLevel));
-        var creature = Pick(QuestWordPools.CreaturesForTier(tier));
-        var material = Pick(QuestWordPools.MaterialsForTier(tier));
+        var (location, adjective, creature, material) = words;
 
         return questType switch
         {
@@ -51,16 +70,13 @@ public class QuestNameBuilder(IRandomProvider random)
                 () => $"Safe Passage through {Capitalize(location)}"
             ])(),
 
-            _ => $"A {Capitalize(tier.ToString())} Contract"
+            _ => $"A {Capitalize(questType.ToString())} Contract"
         };
     }
 
-    internal string BuildDescription(DifficultyTier tier, RiskLevel riskLevel, QuestType questType)
+    internal string BuildDescription(QuestWordSelection words, QuestType questType)
     {
-        var location = Pick(QuestWordPools.LocationsForTier(tier));
-        var adjective = Pick(QuestWordPools.AdjectivesForRisk(riskLevel));
-        var creature = Pick(QuestWordPools.CreaturesForTier(tier));
-        var material = Pick(QuestWordPools.MaterialsForTier(tier));
+        var (location, adjective, creature, material) = words;
 
         return questType switch
         {

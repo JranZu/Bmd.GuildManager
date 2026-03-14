@@ -14,7 +14,7 @@ public class HandleCharacterCreatedFunction(
 {
 	[Function("HandleCharacterCreated")]
 	public async Task RunAsync(
-		[ServiceBusTrigger("player-events", "character-created-sub",
+		[ServiceBusTrigger(ServiceBusConstants.PlayerEventsTopic, ServiceBusConstants.CharacterCreatedSubscription,
 			Connection = "ServiceBusConnectionString")]
 		string message,
 		CancellationToken cancellationToken = default)

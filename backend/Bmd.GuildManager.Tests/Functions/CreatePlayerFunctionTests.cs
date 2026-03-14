@@ -79,9 +79,34 @@ public class CreatePlayerFunctionTests
     }
 
     [Fact]
-    public async Task RunAsync_DuplicateIdempotencyKey_ReturnsExistingPlayerIdWithoutCreatingNew()
+    public async Task RunAsync_DuplicateIdempotencyKey_UnOnboarded_ReturnsExistingAndRepublishesEvent()
     {
         var existingPlayer = Player.Create("Test Guild", "test-key-123");
+        var repository = new FakePlayerRepository();
+        repository.Players.Add(existingPlayer);
+
+        var publisher = new FakeEventPublisher();
+        var function = new CreatePlayerFunction(repository, publisher, NullLogger<CreatePlayerFunction>.Instance);
+
+        var request = BuildRequest(new { guildName = "Test Guild" }, "test-key-123");
+        var result = await function.RunAsync(request) as ObjectResult;
+
+        Assert.NotNull(result);
+        Assert.Equal(StatusCodes.Status201Created, result.StatusCode);
+        Assert.Single(repository.Players);
+        Assert.Single(publisher.Published);
+        Assert.Equal("PlayerCreated", publisher.Published[0].EventType);
+
+        var data = (PlayerCreated)publisher.Published[0].Data;
+        Assert.Equal(existingPlayer.PlayerId, data.PlayerId);
+        Assert.Equal(existingPlayer.GuildName, data.GuildName);
+    }
+
+    [Fact]
+    public async Task RunAsync_DuplicateIdempotencyKey_AlreadyOnboarded_ReturnsExistingWithoutRepublish()
+    {
+        var existingPlayer = Player.Create("Test Guild", "test-key-123")
+            with { OnboardedAt = DateTimeOffset.UtcNow };
         var repository = new FakePlayerRepository();
         repository.Players.Add(existingPlayer);
 

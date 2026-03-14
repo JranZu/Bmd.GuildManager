@@ -15,7 +15,7 @@ namespace Bmd.GuildManager.Functions.Functions;
 public class ResolveQuestFunction(
     IQuestRepository questRepository,
     ICharacterRepository characterRepository,
-    [FromKeyedServices("quest-events")] IEventPublisher eventPublisher,
+    [FromKeyedServices(ServiceBusConstants.QuestEventsTopic)] IEventPublisher eventPublisher,
     BlobServiceClient blobServiceClient,
     QuestResolutionService resolutionService,
     ILogger<ResolveQuestFunction> logger)
@@ -24,7 +24,7 @@ public class ResolveQuestFunction(
 
     [Function("ResolveQuest")]
     public async Task RunAsync(
-        [ServiceBusTrigger("quest-completed", Connection = "ServiceBusConnectionString")]
+        [ServiceBusTrigger(ServiceBusConstants.QuestCompletedQueue, Connection = "ServiceBusConnectionString")]
         string messageBody,
         CancellationToken cancellationToken = default)
     {
@@ -65,16 +65,23 @@ public class ResolveQuestFunction(
 
         var quest = questDoc.Document;
 
-        // --- 3. Load assigned characters ---
+        // --- 3. Load assigned characters in parallel ---
         // Compensating check: only include characters whose status is OnQuest or Dead.
         // If StartQuestFunction partially failed (ETag conflict after quest claim),
         // a character may still be in Idle status — skip those to avoid awarding
         // XP/gold for a quest they never actually participated in.
+        var charDocTasks = quest.AssignedCharacterIds
+            .Select(id => characterRepository.FindByCharacterIdAsync(id, playerId, cancellationToken))
+            .ToList();
+
+        var charDocs = await Task.WhenAll(charDocTasks);
+
         var characters = new List<Character>();
-        foreach (var characterId in quest.AssignedCharacterIds)
+        for (var i = 0; i < quest.AssignedCharacterIds.Count; i++)
         {
-            var charDoc = await characterRepository
-                .FindByCharacterIdAsync(characterId, playerId, cancellationToken);
+            var characterId = quest.AssignedCharacterIds[i];
+            var charDoc = charDocs[i];
+
             if (charDoc is null)
                 continue;
 

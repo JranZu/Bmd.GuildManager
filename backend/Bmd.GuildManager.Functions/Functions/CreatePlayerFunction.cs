@@ -14,7 +14,7 @@ namespace Bmd.GuildManager.Functions.Functions;
 
 public class CreatePlayerFunction(
     IPlayerRepository playerRepository,
-	[FromKeyedServices("player-events")] IEventPublisher eventPublisher,
+	[FromKeyedServices(ServiceBusConstants.PlayerEventsTopic)] IEventPublisher eventPublisher,
     ILogger<CreatePlayerFunction> logger)
 {
     [Function("CreatePlayer")]
@@ -51,6 +51,24 @@ public class CreatePlayerFunction(
                     "Duplicate request detected for idempotency key {Key}, returning existing player {PlayerId}",
                     idempotencyKey,
                     existing.PlayerId);
+
+                // If the player was never onboarded the original PlayerCreated
+                // event may have been lost (CreateAsync succeeded but PublishAsync
+                // threw). Re-publish so onboarding can proceed.
+                if (existing.OnboardedAt is null)
+                {
+                    var retryPayload = new PlayerCreated(existing.PlayerId, existing.GuildName);
+                    var retryEnvelope = EventEnvelope<PlayerCreated>.Create(
+                        source: "CreatePlayerFunction",
+                        correlationId: existing.PlayerId,
+                        data: retryPayload);
+
+                    await eventPublisher.PublishAsync(retryEnvelope, ct);
+
+                    logger.LogInformation(
+                        "Re-published PlayerCreated event for un-onboarded player {PlayerId}",
+                        existing.PlayerId);
+                }
 
                 return new ObjectResult(new { playerId = existing.PlayerId })
                 {

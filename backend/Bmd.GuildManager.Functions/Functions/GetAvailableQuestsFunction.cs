@@ -1,5 +1,5 @@
 ﻿using Bmd.GuildManager.Core.Abstractions;
-using Bmd.GuildManager.Core.Models.Requests;
+using Bmd.GuildManager.Core.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;

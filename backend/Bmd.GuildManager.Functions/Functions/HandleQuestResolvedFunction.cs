@@ -15,7 +15,7 @@ public class HandleQuestResolvedFunction(
 {
     [Function("HandleQuestResolved")]
     public async Task RunAsync(
-        [ServiceBusTrigger("quest-events", "character-quest-resolved-sub",
+        [ServiceBusTrigger(ServiceBusConstants.QuestEventsTopic, ServiceBusConstants.CharacterQuestResolvedSubscription,
             Connection = "ServiceBusConnectionString")]
         string messageBody,
         CancellationToken cancellationToken = default)

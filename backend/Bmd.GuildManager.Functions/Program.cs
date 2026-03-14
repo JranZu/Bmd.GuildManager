@@ -52,18 +52,18 @@ builder.Services.AddSingleton<QuestResolutionService>();
 builder.Services.AddKeyedSingleton<ServiceBusEventPublisher>("player-events-publisher", (sp, _) =>
 	new ServiceBusEventPublisher(
 		sp.GetRequiredService<ServiceBusClient>(),
-		"player-events"));
+		ServiceBusConstants.PlayerEventsTopic));
 
 builder.Services.AddKeyedSingleton<ServiceBusEventPublisher>("quest-events-publisher", (sp, _) =>
 	new ServiceBusEventPublisher(
 		sp.GetRequiredService<ServiceBusClient>(),
-		"quest-events"));
+		ServiceBusConstants.QuestEventsTopic));
 
 // Expose them as IEventPublisher using the existing keys
-builder.Services.AddKeyedSingleton<IEventPublisher>("player-events",
+builder.Services.AddKeyedSingleton<IEventPublisher>(ServiceBusConstants.PlayerEventsTopic,
 	(sp, _) => sp.GetRequiredKeyedService<ServiceBusEventPublisher>("player-events-publisher"));
 
-builder.Services.AddKeyedSingleton<IEventPublisher>("quest-events",
+builder.Services.AddKeyedSingleton<IEventPublisher>(ServiceBusConstants.QuestEventsTopic,
 	(sp, _) => sp.GetRequiredKeyedService<ServiceBusEventPublisher>("quest-events-publisher"));
 
 builder.Services.AddSingleton(_ =>
