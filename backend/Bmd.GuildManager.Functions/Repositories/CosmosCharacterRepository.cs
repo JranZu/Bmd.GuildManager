@@ -1,16 +1,16 @@
 ﻿using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Models;
+using Bmd.GuildManager.Functions.Serialization;
 using Microsoft.Azure.Cosmos;
 
 namespace Bmd.GuildManager.Functions.Repositories;
 
 public class CosmosCharacterRepository(CosmosClient cosmosClient) : ICharacterRepository
 {
-	private const string DatabaseName = "guildmanager";
 	private const string ContainerName = "Characters";
 
 	private Container Container =>
-		cosmosClient.GetContainer(DatabaseName, ContainerName);
+		cosmosClient.GetContainer(CosmosConstants.DatabaseName, ContainerName);
 
 	public async Task CreateAsync(Character character, CancellationToken cancellationToken = default)
 	{

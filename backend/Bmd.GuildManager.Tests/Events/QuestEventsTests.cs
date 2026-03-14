@@ -18,7 +18,7 @@ public class QuestEventsTests
         var payload = new QuestStarted(
             Guid.NewGuid(),
             Guid.NewGuid(),
-            "Combat",
+            QuestType.Kill,
             DifficultyTier.Elite,
             [Guid.NewGuid(), Guid.NewGuid()],
             300,

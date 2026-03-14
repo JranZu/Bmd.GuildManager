@@ -1,15 +1,15 @@
 ﻿using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Models;
+using Bmd.GuildManager.Functions.Serialization;
 using Microsoft.Azure.Cosmos;
 
 namespace Bmd.GuildManager.Functions.Repositories;
 
 public class CosmosPlayerRepository(CosmosClient cosmosClient) : IPlayerRepository
 {
-    private const string DatabaseName = "guildmanager";
-    private const string ContainerName = "Players";
+	private const string ContainerName = "Players";
 
-    private Container Container => cosmosClient.GetContainer(DatabaseName, ContainerName);
+	private Container Container => cosmosClient.GetContainer(CosmosConstants.DatabaseName, ContainerName);
 
 	public async Task CreateAsync(Player player, CancellationToken cancellationToken = default)
 	{

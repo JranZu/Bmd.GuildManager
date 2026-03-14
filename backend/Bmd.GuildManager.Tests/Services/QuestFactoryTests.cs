@@ -169,7 +169,7 @@ public class QuestFactoryTests
         Assert.False(string.IsNullOrWhiteSpace(quest.Description));
     }
 
-    // FakeRandomProvider.NextInt(0, 5) = 2 → "Rescue"
+    // FakeRandomProvider.NextInt(0, 5) = 2 → Rescue
     [Theory]
     [InlineData(DifficultyTier.Novice)]
     [InlineData(DifficultyTier.Apprentice)]
@@ -179,10 +179,10 @@ public class QuestFactoryTests
     public void Generate_QuestType_IsRescueForFakeRandom(DifficultyTier tier)
     {
         var quest = _factory.Generate(tier);
-        Assert.Equal("Rescue", quest.QuestType);
+        Assert.Equal(QuestType.Rescue, quest.QuestType);
     }
 
-    // FakeRandomProvider.NextInt(0, 10) = 5, which is < 8 → "Medium"
+    // FakeRandomProvider.NextInt(0, 10) = 5, which is < 8 → Medium
     [Theory]
     [InlineData(DifficultyTier.Novice)]
     [InlineData(DifficultyTier.Apprentice)]
@@ -192,7 +192,7 @@ public class QuestFactoryTests
     public void Generate_RiskLevel_IsMediumForFakeRandom(DifficultyTier tier)
     {
         var quest = _factory.Generate(tier);
-        Assert.Equal("Medium", quest.RiskLevel);
+        Assert.Equal(RiskLevel.Medium, quest.RiskLevel);
     }
 
     // --- AllTiers helper ---

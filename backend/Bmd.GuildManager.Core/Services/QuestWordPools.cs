@@ -154,12 +154,12 @@ internal static class QuestWordPools
         _ => throw new ArgumentOutOfRangeException(nameof(tier), tier, null)
     };
 
-    internal static string[] AdjectivesForRisk(string riskLevel) => riskLevel switch
+    internal static string[] AdjectivesForRisk(RiskLevel riskLevel) => riskLevel switch
     {
-        "Low" => AdjectivesLow,
-        "Medium" => AdjectivesMedium,
-        "High" => AdjectivesHigh,
-        _ => AdjectivesLow
+        RiskLevel.Low => AdjectivesLow,
+        RiskLevel.Medium => AdjectivesMedium,
+        RiskLevel.High => AdjectivesHigh,
+        _ => throw new ArgumentOutOfRangeException(nameof(riskLevel), riskLevel, null)
     };
 
     internal static string[] CreaturesForTier(DifficultyTier tier) => tier switch

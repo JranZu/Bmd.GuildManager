@@ -15,8 +15,6 @@ public class OnboardPlayerFunction(
 	[FromKeyedServices("player-events")] IEventPublisher eventPublisher,
 	ILogger<OnboardPlayerFunction> logger)
 {
-	const int StartingGold = 500;
-
 	[Function("OnboardPlayer")]
 	public async Task RunAsync(
 		[ServiceBusTrigger("player-events", "onboarding-sub", Connection = "ServiceBusConnectionString")]
@@ -67,7 +65,7 @@ public class OnboardPlayerFunction(
 			return;
 		}
 
-		var updatedPlayer = player with { Gold = StartingGold, OnboardedAt = DateTimeOffset.UtcNow };
+		var updatedPlayer = player with { Gold = GameConstants.StartingGold, OnboardedAt = DateTimeOffset.UtcNow };
 
 		try
 		{
@@ -84,9 +82,9 @@ public class OnboardPlayerFunction(
 			throw;
 		}
 
-		logger.LogInformation("Guild provisioned with {startingGold} gold for player {PlayerId}", StartingGold, playerId);
+		logger.LogInformation("Guild provisioned with {startingGold} gold for player {PlayerId}", GameConstants.StartingGold, playerId);
 
-		var guildCreated = new GuildCreated(playerId, guildName, StartingGold);
+		var guildCreated = new GuildCreated(playerId, guildName, GameConstants.StartingGold);
 		var guildCreatedEnvelope = EventEnvelope<GuildCreated>.Create(
 			source: "OnboardPlayerFunction",
 			correlationId: playerId,

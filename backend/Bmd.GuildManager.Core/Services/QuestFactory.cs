@@ -51,22 +51,22 @@ public class QuestFactory
 
     public static IReadOnlyList<DifficultyTier> AllTiers() => Tiers;
 
-    private string PickQuestType() =>
+    private QuestType PickQuestType() =>
         _random.NextInt(0, 5) switch
         {
-            0 => "Kill",
-            1 => "Gather",
-            2 => "Rescue",
-            3 => "Delivery",
-            _ => "Escort"
+            0 => QuestType.Kill,
+            1 => QuestType.Gather,
+            2 => QuestType.Rescue,
+            3 => QuestType.Delivery,
+            _ => QuestType.Escort
         };
 
-    private string PickRiskLevel() =>
+    private RiskLevel PickRiskLevel() =>
         _random.NextInt(0, 10) switch
         {
-            < 4 => "Low",
-            < 8 => "Medium",
-            _   => "High"
+            < 4 => RiskLevel.Low,
+            < 8 => RiskLevel.Medium,
+            _   => RiskLevel.High
         };
 
     private static (int minDiff, int maxDiff,

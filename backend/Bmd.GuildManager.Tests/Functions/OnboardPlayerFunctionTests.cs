@@ -35,7 +35,7 @@ public class OnboardPlayerFunctionTests
 		var message = BuildMessage(player.PlayerId, player.GuildName);
 		await function.RunAsync(message, TestContext.Current.CancellationToken);
 
-		Assert.Equal(500, repository.Players[0].Gold);
+		Assert.Equal(GameConstants.StartingGold, repository.Players[0].Gold);
 		Assert.NotNull(repository.Players[0].OnboardedAt);
 		Assert.Equal(3, publisher.Published.Count);
 		Assert.Equal("GuildCreated", publisher.Published[0].EventType);
