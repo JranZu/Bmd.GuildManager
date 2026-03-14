@@ -1,4 +1,4 @@
-# System Architecture Document
+﻿# System Architecture Document
 
 ## Project: Guild Manager
 
@@ -174,14 +174,14 @@ Suggested containers:
 ```
 Players
 Characters
+Quests
 MarketListings
 WorldPopulation
 WorldNews
 Events
-Quests
 ```
 
-Items are not stored in a standalone `Items` container. Item data is embedded within the owning document (`Player.stash`, `Character.equipment`, or `MarketListings.item`).
+`Items` and `Inventory` containers do not exist. Item data is embedded within the owning document (`Player.stash`, `Character.equipment`, `MarketListings.item`).
 
 Cosmos DB advantages:
 
@@ -238,13 +238,13 @@ Example entities.
 ### Player
 
 ```
-PlayerId
-GuildName
-Gold
-CreatedDate
-OnboardedAt  (nullable datetime - set when onboarding completes; null if not yet onboarded)
-idempotencyKey  (nullable string)
-stash  (array of StashedItem, max 50)
+id / playerId
+guildName
+gold
+createdDate
+onboardedAt        (nullable)
+idempotencyKey     (nullable)
+stash              (array of embedded Item objects, max 50)
 ```
 
 `stash` is bounded to a maximum of 50 items. Loot drops that would exceed this limit are rejected with an event or HTTP error (final behavior is defined in Phase 11 pre-phase design).
@@ -254,29 +254,24 @@ stash  (array of StashedItem, max 50)
 ### Character
 
 ```
-id
-characterId
+id / characterId
 playerId
 name
 level
 xp
-strength
-luck
-endurance
-status (Idle / OnQuest / Dead)
-equipment  (array of equipped Item — max 7 entries, one per slot)
-           (slots: MainHand, Offhand, Chest, Head, Feet, Ring, Accessory)
+strength / luck / endurance
+status             (Idle | OnQuest | Dead)
+equipment          (array of embedded Item objects, max 7 — one per slot)
 activeQuestSnapshot (nullable)
-  questId
-  name
-  description
-  tier
-  estimatedCompletionAt
 ```
 
 ---
 
-Items are not stored as independent documents. They are embedded as objects within the document of whichever entity currently owns them — the `Player` stash array, the `Character` equipment array, or the `MarketListings` document. This aligns storage with read patterns (an item is always read in the context of its owner) and eliminates the Cosmos DB partition key immutability problem that would arise when ownership changes.
+### Item
+
+Items are not stored as independent documents. See the Stashed/Equipped Item shape defined in the detailed §4 data model below.
+
+---
 
 ### Stashed Items / Equipped Items (same shape, different context)
 
@@ -326,13 +321,19 @@ Partition key: /questId (self-partitioned; container is small and bounded)
 ### Market Listing
 
 ```
-ListingId
-SellerId
-Price
-Tier
-CreatedDate
-item  (embedded StashedItem object — full item data copied at listing time)
+id / listingId
+sellerId
+price
+tier
+createdAt
+item   (embedded Item object — full item data copied at listing time)
 ```
+
+---
+
+### World Population
+
+Single global record. Full schema defined in Phase 18.
 
 ---
 
