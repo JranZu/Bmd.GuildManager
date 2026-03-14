@@ -6,6 +6,7 @@ namespace Bmd.GuildManager.Functions.Services;
 
 public class QuestGeneratorService(
     IQuestRepository questRepository,
+    QuestFactory questFactory,
     ILogger<QuestGeneratorService> logger) : IQuestGeneratorService
 {
     public async Task EnsureMinimumQuestsAsync(int minimumPerTier)
@@ -29,7 +30,7 @@ public class QuestGeneratorService(
 
             for (var i = 0; i < needed; i++)
             {
-                var quest = QuestFactory.Generate(tier);
+                var quest = questFactory.Generate(tier);
                 await questRepository.CreateAsync(quest);
             }
         }

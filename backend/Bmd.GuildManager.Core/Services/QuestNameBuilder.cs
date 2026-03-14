@@ -1,10 +1,13 @@
-﻿using Bmd.GuildManager.Core.Models;
+﻿using Bmd.GuildManager.Core.Abstractions;
+using Bmd.GuildManager.Core.Models;
 
 namespace Bmd.GuildManager.Core.Services;
 
-internal static class QuestNameBuilder
+internal class QuestNameBuilder(IRandomProvider random)
 {
-    internal static string BuildName(DifficultyTier tier, string riskLevel, string questType)
+    private readonly IRandomProvider _random = random;
+
+    internal string BuildName(DifficultyTier tier, string riskLevel, string questType)
     {
         var location = Pick(QuestWordPools.LocationsForTier(tier));
         var adjective = Pick(QuestWordPools.AdjectivesForRisk(riskLevel));
@@ -52,7 +55,7 @@ internal static class QuestNameBuilder
         };
     }
 
-    internal static string BuildDescription(DifficultyTier tier, string riskLevel, string questType)
+    internal string BuildDescription(DifficultyTier tier, string riskLevel, string questType)
     {
         var location = Pick(QuestWordPools.LocationsForTier(tier));
         var adjective = Pick(QuestWordPools.AdjectivesForRisk(riskLevel));
@@ -100,11 +103,11 @@ internal static class QuestNameBuilder
         };
     }
 
-    private static T Pick<T>(T[] options) =>
-        options[Random.Shared.Next(options.Length)];
+    private T Pick<T>(T[] options) =>
+        options[_random.NextInt(0, options.Length)];
 
-    private static string Pick(string[] options) =>
-        options[Random.Shared.Next(options.Length)];
+    private string Pick(string[] options) =>
+        options[_random.NextInt(0, options.Length)];
 
     private static string Capitalize(string input) =>
         string.IsNullOrEmpty(input)

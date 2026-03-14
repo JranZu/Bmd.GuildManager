@@ -1,12 +1,12 @@
 ﻿using Bmd.GuildManager.Core.Models;
 using Bmd.GuildManager.Core.Services;
+using Bmd.GuildManager.Tests.Functions;
 
 namespace Bmd.GuildManager.Tests.Services;
 
 public class QuestFactoryTests
 {
-    private static readonly DifficultyTier[] AllTiers =
-        [DifficultyTier.Novice, DifficultyTier.Apprentice, DifficultyTier.Veteran, DifficultyTier.Elite, DifficultyTier.Legendary];
+    private readonly QuestFactory _factory = new(new FakeRandomProvider());
 
     // --- Structure tests ---
 
@@ -18,7 +18,7 @@ public class QuestFactoryTests
     [InlineData(DifficultyTier.Legendary)]
     public void Generate_QuestId_IsNotEmpty(DifficultyTier tier)
     {
-        var quest = QuestFactory.Generate(tier);
+        var quest = _factory.Generate(tier);
         Assert.NotEqual(Guid.Empty, quest.QuestId);
     }
 
@@ -30,7 +30,7 @@ public class QuestFactoryTests
     [InlineData(DifficultyTier.Legendary)]
     public void Generate_Id_MatchesQuestId(DifficultyTier tier)
     {
-        var quest = QuestFactory.Generate(tier);
+        var quest = _factory.Generate(tier);
         Assert.Equal(quest.QuestId.ToString(), quest.Id);
     }
 
@@ -42,7 +42,7 @@ public class QuestFactoryTests
     [InlineData(DifficultyTier.Legendary)]
     public void Generate_Status_IsAvailable(DifficultyTier tier)
     {
-        var quest = QuestFactory.Generate(tier);
+        var quest = _factory.Generate(tier);
         Assert.Equal(QuestStatus.Available, quest.Status);
     }
 
@@ -54,7 +54,7 @@ public class QuestFactoryTests
     [InlineData(DifficultyTier.Legendary)]
     public void Generate_Tier_MatchesRequested(DifficultyTier tier)
     {
-        var quest = QuestFactory.Generate(tier);
+        var quest = _factory.Generate(tier);
         Assert.Equal(tier, quest.Tier);
     }
 
@@ -66,7 +66,7 @@ public class QuestFactoryTests
     [InlineData(DifficultyTier.Legendary)]
     public void Generate_PlayerId_IsNull(DifficultyTier tier)
     {
-        var quest = QuestFactory.Generate(tier);
+        var quest = _factory.Generate(tier);
         Assert.Null(quest.PlayerId);
     }
 
@@ -78,7 +78,7 @@ public class QuestFactoryTests
     [InlineData(DifficultyTier.Legendary)]
     public void Generate_AssignedCharacterIds_IsEmpty(DifficultyTier tier)
     {
-        var quest = QuestFactory.Generate(tier);
+        var quest = _factory.Generate(tier);
         Assert.Empty(quest.AssignedCharacterIds);
     }
 
@@ -90,7 +90,7 @@ public class QuestFactoryTests
     [InlineData(DifficultyTier.Legendary)]
     public void Generate_StartedAt_IsNull(DifficultyTier tier)
     {
-        var quest = QuestFactory.Generate(tier);
+        var quest = _factory.Generate(tier);
         Assert.Null(quest.StartedAt);
     }
 
@@ -102,7 +102,7 @@ public class QuestFactoryTests
     [InlineData(DifficultyTier.Legendary)]
     public void Generate_EstimatedCompletionAt_IsNull(DifficultyTier tier)
     {
-        var quest = QuestFactory.Generate(tier);
+        var quest = _factory.Generate(tier);
         Assert.Null(quest.EstimatedCompletionAt);
     }
 
@@ -115,35 +115,32 @@ public class QuestFactoryTests
     public void Generate_CreatedAt_IsRecentUtc(DifficultyTier tier)
     {
         var before = DateTimeOffset.UtcNow;
-        var quest = QuestFactory.Generate(tier);
+        var quest = _factory.Generate(tier);
         var after = DateTimeOffset.UtcNow;
 
         Assert.InRange(quest.CreatedAt, before, after);
     }
 
-    // --- Tier range tests ---
+    // --- Tier parameter tests ---
 
+    // FakeRandomProvider.NextInt(min, maxExclusive) returns (min + maxExclusive) / 2
     [Theory]
-    [InlineData(DifficultyTier.Novice,      9,   60,  1, 1,  60,   180)]
-    [InlineData(DifficultyTier.Apprentice,  60,  120, 1, 2,  120,  300)]
-    [InlineData(DifficultyTier.Veteran,     120, 240, 2, 3,  240,  600)]
-    [InlineData(DifficultyTier.Elite,       240, 480, 3, 4,  480,  900)]
-    [InlineData(DifficultyTier.Legendary,   480, 960, 4, 5,  600,  1800)]
-    public void Generate_TierParameters_AreWithinRange(
+    [InlineData(DifficultyTier.Novice,      35,  1,  120)]
+    [InlineData(DifficultyTier.Apprentice,  90,  2,  210)]
+    [InlineData(DifficultyTier.Veteran,     180, 3,  420)]
+    [InlineData(DifficultyTier.Elite,       360, 4,  690)]
+    [InlineData(DifficultyTier.Legendary,   720, 5,  1200)]
+    public void Generate_TierParameters_AreExactForFakeRandom(
         DifficultyTier tier,
-        int minDiff, int maxDiff,
-        int minAdv, int maxAdv,
-        int minDur, int maxDur)
+        int expectedDifficulty,
+        int expectedAdventurers,
+        int expectedDuration)
     {
-        // Run multiple times to exercise randomness
-        for (var i = 0; i < 20; i++)
-        {
-            var quest = QuestFactory.Generate(tier);
+        var quest = _factory.Generate(tier);
 
-            Assert.InRange(quest.DifficultyRating, minDiff, maxDiff);
-            Assert.InRange(quest.RequiredAdventurers, minAdv, maxAdv);
-            Assert.InRange(quest.DurationSeconds, minDur, maxDur);
-        }
+        Assert.Equal(expectedDifficulty,  quest.DifficultyRating);
+        Assert.Equal(expectedAdventurers, quest.RequiredAdventurers);
+        Assert.Equal(expectedDuration,    quest.DurationSeconds);
     }
 
     // --- String content tests ---
@@ -156,11 +153,8 @@ public class QuestFactoryTests
     [InlineData(DifficultyTier.Legendary)]
     public void Generate_Name_IsNotNullOrWhiteSpace(DifficultyTier tier)
     {
-        for (var i = 0; i < 20; i++)
-        {
-            var quest = QuestFactory.Generate(tier);
-            Assert.False(string.IsNullOrWhiteSpace(quest.Name));
-        }
+        var quest = _factory.Generate(tier);
+        Assert.False(string.IsNullOrWhiteSpace(quest.Name));
     }
 
     [Theory]
@@ -171,43 +165,34 @@ public class QuestFactoryTests
     [InlineData(DifficultyTier.Legendary)]
     public void Generate_Description_IsNotNullOrWhiteSpace(DifficultyTier tier)
     {
-        for (var i = 0; i < 20; i++)
-        {
-            var quest = QuestFactory.Generate(tier);
-            Assert.False(string.IsNullOrWhiteSpace(quest.Description));
-        }
+        var quest = _factory.Generate(tier);
+        Assert.False(string.IsNullOrWhiteSpace(quest.Description));
     }
 
+    // FakeRandomProvider.NextInt(0, 5) = 2 → "Rescue"
     [Theory]
     [InlineData(DifficultyTier.Novice)]
     [InlineData(DifficultyTier.Apprentice)]
     [InlineData(DifficultyTier.Veteran)]
     [InlineData(DifficultyTier.Elite)]
     [InlineData(DifficultyTier.Legendary)]
-    public void Generate_QuestType_IsNotNullOrWhiteSpace(DifficultyTier tier)
+    public void Generate_QuestType_IsRescueForFakeRandom(DifficultyTier tier)
     {
-        for (var i = 0; i < 20; i++)
-        {
-            var quest = QuestFactory.Generate(tier);
-            Assert.False(string.IsNullOrWhiteSpace(quest.QuestType));
-        }
+        var quest = _factory.Generate(tier);
+        Assert.Equal("Rescue", quest.QuestType);
     }
 
+    // FakeRandomProvider.NextInt(0, 10) = 5, which is < 8 → "Medium"
     [Theory]
     [InlineData(DifficultyTier.Novice)]
     [InlineData(DifficultyTier.Apprentice)]
     [InlineData(DifficultyTier.Veteran)]
     [InlineData(DifficultyTier.Elite)]
     [InlineData(DifficultyTier.Legendary)]
-    public void Generate_RiskLevel_IsValidValue(DifficultyTier tier)
+    public void Generate_RiskLevel_IsMediumForFakeRandom(DifficultyTier tier)
     {
-        string[] validRiskLevels = ["Low", "Medium", "High"];
-
-        for (var i = 0; i < 20; i++)
-        {
-            var quest = QuestFactory.Generate(tier);
-            Assert.Contains(quest.RiskLevel, validRiskLevels);
-        }
+        var quest = _factory.Generate(tier);
+        Assert.Equal("Medium", quest.RiskLevel);
     }
 
     // --- AllTiers helper ---
@@ -228,5 +213,4 @@ public class QuestFactoryTests
         Assert.Contains(DifficultyTier.Elite,       tiers);
         Assert.Contains(DifficultyTier.Legendary,   tiers);
     }
-
-    }
+}

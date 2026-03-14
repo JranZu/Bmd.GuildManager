@@ -1,13 +1,23 @@
-﻿using Bmd.GuildManager.Core.Models;
+﻿using Bmd.GuildManager.Core.Abstractions;
+using Bmd.GuildManager.Core.Models;
 
 namespace Bmd.GuildManager.Core.Services;
 
-public static class QuestFactory
+public class QuestFactory
 {
     private static readonly DifficultyTier[] Tiers =
         [DifficultyTier.Novice, DifficultyTier.Apprentice, DifficultyTier.Veteran, DifficultyTier.Elite, DifficultyTier.Legendary];
 
-    public static Quest Generate(DifficultyTier tier)
+    private readonly IRandomProvider _random;
+    private readonly QuestNameBuilder _nameBuilder;
+
+    public QuestFactory(IRandomProvider random)
+    {
+        _random = random;
+        _nameBuilder = new QuestNameBuilder(random);
+    }
+
+    public Quest Generate(DifficultyTier tier)
     {
         var (minDifficulty, maxDifficulty,
              minAdventurers, maxAdventurers,
@@ -16,15 +26,15 @@ public static class QuestFactory
         var questId = Guid.NewGuid();
         var questType = PickQuestType();
         var riskLevel = PickRiskLevel();
-        var difficulty = Random.Shared.Next(minDifficulty, maxDifficulty + 1);
-        var adventurers = Random.Shared.Next(minAdventurers, maxAdventurers + 1);
-        var duration = Random.Shared.Next(minDuration, maxDuration + 1);
+        var difficulty = _random.NextInt(minDifficulty, maxDifficulty + 1);
+        var adventurers = _random.NextInt(minAdventurers, maxAdventurers + 1);
+        var duration = _random.NextInt(minDuration, maxDuration + 1);
 
         return new Quest(
             Id:                     questId.ToString(),
             QuestId:                questId,
-            Name:                   QuestNameBuilder.BuildName(tier, riskLevel, questType),
-            Description:            QuestNameBuilder.BuildDescription(tier, riskLevel, questType),
+            Name:                   _nameBuilder.BuildName(tier, riskLevel, questType),
+            Description:            _nameBuilder.BuildDescription(tier, riskLevel, questType),
             QuestType:              questType,
             Tier:                   tier,
             RiskLevel:              riskLevel,
@@ -41,8 +51,8 @@ public static class QuestFactory
 
     public static IReadOnlyList<DifficultyTier> AllTiers() => Tiers;
 
-    private static string PickQuestType() =>
-        Random.Shared.Next(5) switch
+    private string PickQuestType() =>
+        _random.NextInt(0, 5) switch
         {
             0 => "Kill",
             1 => "Gather",
@@ -51,8 +61,8 @@ public static class QuestFactory
             _ => "Escort"
         };
 
-    private static string PickRiskLevel() =>
-        Random.Shared.Next(10) switch
+    private string PickRiskLevel() =>
+        _random.NextInt(0, 10) switch
         {
             < 4 => "Low",
             < 8 => "Medium",
