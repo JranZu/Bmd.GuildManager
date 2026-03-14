@@ -11,10 +11,10 @@ public class QuestFactory
     private readonly IRandomProvider _random;
     private readonly QuestNameBuilder _nameBuilder;
 
-    public QuestFactory(IRandomProvider random)
+    public QuestFactory(IRandomProvider random, QuestNameBuilder nameBuilder)
     {
         _random = random;
-        _nameBuilder = new QuestNameBuilder(random);
+        _nameBuilder = nameBuilder;
     }
 
     public Quest Generate(DifficultyTier tier)

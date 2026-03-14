@@ -141,8 +141,15 @@ public class StartQuestFunction(
 
         // --- 7. Update characters to OnQuest ---
         // Quest is now claimed. If any character update fails we log it as a
-        // critical error and return 500. The quest will time out naturally and
-        // resolve harmlessly — no characters assigned means no consequences.
+        // critical error and return 500.
+        //
+        // KNOWN LIMITATION: The quest has been claimed in Cosmos but this character's
+        // status was not updated to OnQuest. When the QuestCompleted message fires,
+        // ResolveQuestFunction will attempt to award XP/gold to all AssignedCharacterIds
+        // including this one — even though their status is still Idle.
+        // A compensating check in ResolveQuestFunction guards against this (see that function).
+        // True atomicity would require Cosmos transactions (single-partition only) and is
+        // deferred to a future reliability hardening phase.
         var snapshot = new ActiveQuestSnapshot(
             QuestId: quest.QuestId,
             Name: quest.Name,
@@ -166,9 +173,10 @@ public class StartQuestFunction(
                 when (ex.StatusCode == System.Net.HttpStatusCode.PreconditionFailed)
             {
                 logger.LogCritical(
-                    "ETag conflict updating character {CharacterId} after quest {QuestId} " +
-                    "was already claimed. Quest will time out harmlessly.",
-                    character.CharacterId, quest.QuestId);
+                        "ETag conflict updating character {CharacterId} after quest {QuestId} " +
+                        "was already claimed. Character will remain Idle; " +
+                        "ResolveQuestFunction compensating check will skip this character.",
+                        character.CharacterId, quest.QuestId);
                 return new ObjectResult(
                     "Quest claimed but character update failed due to concurrent modification. " +
                     "The quest will expire automatically.")

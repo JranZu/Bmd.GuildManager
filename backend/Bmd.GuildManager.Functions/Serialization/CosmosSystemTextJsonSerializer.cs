@@ -13,7 +13,11 @@ public class CosmosSystemTextJsonSerializer(JsonSerializerOptions options)
 	{
 		using (stream)
 		{
-			if (stream.Length == 0) return default!;
+			if (stream.Length == 0)
+				throw new InvalidOperationException(
+					$"CosmosSystemTextJsonSerializer received an empty stream while deserializing {typeof(T).Name}. " +
+					"This is unexpected for document read operations.");
+
 			return (T)_serializer.Deserialize(stream, typeof(T), default)!;
 		}
 	}

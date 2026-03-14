@@ -9,11 +9,11 @@ public class CosmosPlayerRepository(CosmosClient cosmosClient) : IPlayerReposito
 {
 	private const string ContainerName = "Players";
 
-	private Container Container => cosmosClient.GetContainer(CosmosConstants.DatabaseName, ContainerName);
+	private readonly Container _container = cosmosClient.GetContainer(CosmosConstants.DatabaseName, ContainerName);
 
 	public async Task CreateAsync(Player player, CancellationToken cancellationToken = default)
 	{
-		await Container.CreateItemAsync(player, new PartitionKey(player.PlayerId.ToString()), cancellationToken: cancellationToken);
+		await _container.CreateItemAsync(player, new PartitionKey(player.PlayerId.ToString()), cancellationToken: cancellationToken);
 	}
 
 	public async Task UpdateAsync(Player player, string etag, CancellationToken cancellationToken = default)
@@ -23,7 +23,7 @@ public class CosmosPlayerRepository(CosmosClient cosmosClient) : IPlayerReposito
 			IfMatchEtag = etag
 		};
 
-		await Container.ReplaceItemAsync(
+		await _container.ReplaceItemAsync(
 			player,
 			player.Id,
 			new PartitionKey(player.PlayerId.ToString()),
@@ -35,7 +35,7 @@ public class CosmosPlayerRepository(CosmosClient cosmosClient) : IPlayerReposito
 	{
 		try
 		{
-			var response = await Container.ReadItemAsync<Player>(
+			var response = await _container.ReadItemAsync<Player>(
 				playerId.ToString(),
 				new PartitionKey(playerId.ToString()),
 				cancellationToken: cancellationToken);
@@ -52,7 +52,7 @@ public class CosmosPlayerRepository(CosmosClient cosmosClient) : IPlayerReposito
 		var query = new QueryDefinition("SELECT * FROM c WHERE c.idempotencyKey = @key")
 			.WithParameter("@key", idempotencyKey);
 
-		var iterator = Container.GetItemQueryIterator<Player>(query);
+		var iterator = _container.GetItemQueryIterator<Player>(query);
 
 		while (iterator.HasMoreResults)
 		{

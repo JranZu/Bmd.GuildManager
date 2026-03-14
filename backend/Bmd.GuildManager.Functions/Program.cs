@@ -44,6 +44,7 @@ builder.Services.AddSingleton<IQuestRepository, CosmosQuestRepository>();
 builder.Services.AddSingleton<IQuestGeneratorService, QuestGeneratorService>();
 builder.Services.AddSingleton<IMessageScheduler, ServiceBusMessageScheduler>();
 builder.Services.AddSingleton<IRandomProvider, DefaultRandomProvider>();
+builder.Services.AddSingleton<QuestNameBuilder>();
 builder.Services.AddSingleton<QuestFactory>();
 builder.Services.AddSingleton<QuestResolutionService>();
 

@@ -9,12 +9,12 @@ public class CosmosQuestRepository(CosmosClient cosmosClient) : IQuestRepository
 {
     private const string ContainerName = "Quests";
 
-    private Container Container =>
+    private readonly Container _container =
         cosmosClient.GetContainer(CosmosConstants.DatabaseName, ContainerName);
 
     public async Task CreateAsync(Quest quest, CancellationToken cancellationToken = default)
     {
-        await Container.CreateItemAsync(
+        await _container.CreateItemAsync(
             quest,
             new PartitionKey(quest.QuestId.ToString()),
             cancellationToken: cancellationToken);
@@ -24,7 +24,7 @@ public class CosmosQuestRepository(CosmosClient cosmosClient) : IQuestRepository
     {
         try
         {
-            var response = await Container.ReadItemAsync<Quest>(
+            var response = await _container.ReadItemAsync<Quest>(
                 questId.ToString(),
                 new PartitionKey(questId.ToString()),
                 cancellationToken: cancellationToken);
@@ -43,7 +43,7 @@ public class CosmosQuestRepository(CosmosClient cosmosClient) : IQuestRepository
             "SELECT * FROM c WHERE c.status = @status")
             .WithParameter("@status", nameof(QuestStatus.Available));
 
-        var iterator = Container.GetItemQueryIterator<Quest>(query);
+        var iterator = _container.GetItemQueryIterator<Quest>(query);
         var results = new List<Quest>();
 
         while (iterator.HasMoreResults)
@@ -62,7 +62,7 @@ public class CosmosQuestRepository(CosmosClient cosmosClient) : IQuestRepository
             .WithParameter("@status", nameof(QuestStatus.Available))
             .WithParameter("@tier", tier.ToString());
 
-        var iterator = Container.GetItemQueryIterator<int>(query);
+        var iterator = _container.GetItemQueryIterator<int>(query);
         var result = await iterator.ReadNextAsync(cancellationToken);
         return result.FirstOrDefault();
     }
@@ -74,7 +74,7 @@ public class CosmosQuestRepository(CosmosClient cosmosClient) : IQuestRepository
             IfMatchEtag = etag
         };
 
-        await Container.ReplaceItemAsync(
+        await _container.ReplaceItemAsync(
             quest,
             quest.Id,
             new PartitionKey(quest.QuestId.ToString()),
@@ -86,7 +86,7 @@ public class CosmosQuestRepository(CosmosClient cosmosClient) : IQuestRepository
     {
         try
         {
-            await Container.DeleteItemAsync<Quest>(
+            await _container.DeleteItemAsync<Quest>(
                 questId.ToString(),
                 new PartitionKey(questId.ToString()),
                 cancellationToken: cancellationToken);

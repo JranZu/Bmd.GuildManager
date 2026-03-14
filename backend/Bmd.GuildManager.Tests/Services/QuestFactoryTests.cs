@@ -6,7 +6,8 @@ namespace Bmd.GuildManager.Tests.Services;
 
 public class QuestFactoryTests
 {
-    private readonly QuestFactory _factory = new(new FakeRandomProvider());
+    private static readonly FakeRandomProvider Random = new();
+    private readonly QuestFactory _factory = new(Random, new QuestNameBuilder(Random));
 
     // --- Structure tests ---
 

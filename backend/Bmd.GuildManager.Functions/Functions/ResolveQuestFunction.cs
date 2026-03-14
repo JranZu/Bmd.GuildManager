@@ -66,13 +66,28 @@ public class ResolveQuestFunction(
         var quest = questDoc.Document;
 
         // --- 3. Load assigned characters ---
+        // Compensating check: only include characters whose status is OnQuest or Dead.
+        // If StartQuestFunction partially failed (ETag conflict after quest claim),
+        // a character may still be in Idle status — skip those to avoid awarding
+        // XP/gold for a quest they never actually participated in.
         var characters = new List<Character>();
         foreach (var characterId in quest.AssignedCharacterIds)
         {
             var charDoc = await characterRepository
                 .FindByCharacterIdAsync(characterId, playerId, cancellationToken);
-            if (charDoc is not null)            
-                characters.Add(charDoc.Document);            
+            if (charDoc is null)
+                continue;
+
+            if (charDoc.Document.Status is not (CharacterStatus.OnQuest or CharacterStatus.Dead))
+            {
+                logger.LogWarning(
+                    "Character {CharacterId} for quest {QuestId} has status {Status} " +
+                    "instead of OnQuest/Dead — skipping rewards (partial StartQuest failure suspected)",
+                    characterId, questId, charDoc.Document.Status);
+                continue;
+            }
+
+            characters.Add(charDoc.Document);
         }
 
         if (characters.Count == 0)

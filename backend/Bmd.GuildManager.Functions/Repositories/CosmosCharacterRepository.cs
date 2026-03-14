@@ -9,14 +9,14 @@ public class CosmosCharacterRepository(CosmosClient cosmosClient) : ICharacterRe
 {
 	private const string ContainerName = "Characters";
 
-	private Container Container =>
+	private readonly Container _container =
 		cosmosClient.GetContainer(CosmosConstants.DatabaseName, ContainerName);
 
 	public async Task CreateAsync(Character character, CancellationToken cancellationToken = default)
 	{
 		try
 		{
-			await Container.CreateItemAsync(
+			await _container.CreateItemAsync(
 				character,
 				new PartitionKey(character.PlayerId.ToString()),
 				cancellationToken: cancellationToken);
@@ -32,7 +32,7 @@ public class CosmosCharacterRepository(CosmosClient cosmosClient) : ICharacterRe
 	{
 		try
 		{
-			var response = await Container.ReadItemAsync<Character>(
+			var response = await _container.ReadItemAsync<Character>(
 				characterId.ToString(),
 				new PartitionKey(playerId.ToString()),
 				cancellationToken: cancellationToken);
@@ -51,7 +51,7 @@ public class CosmosCharacterRepository(CosmosClient cosmosClient) : ICharacterRe
 			"SELECT * FROM c WHERE c.playerId = @playerId")
 			.WithParameter("@playerId", playerId.ToString());
 
-		var iterator = Container.GetItemQueryIterator<Character>(query);
+		var iterator = _container.GetItemQueryIterator<Character>(query);
 		var results = new List<Character>();
 
 		while (iterator.HasMoreResults)
@@ -70,7 +70,7 @@ public class CosmosCharacterRepository(CosmosClient cosmosClient) : ICharacterRe
 			IfMatchEtag = etag
 		};
 
-		await Container.ReplaceItemAsync(
+		await _container.ReplaceItemAsync(
 			character,
 			character.Id,
 			new PartitionKey(character.PlayerId.ToString()),

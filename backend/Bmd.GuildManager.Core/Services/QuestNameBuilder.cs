@@ -3,7 +3,7 @@ using Bmd.GuildManager.Core.Models;
 
 namespace Bmd.GuildManager.Core.Services;
 
-internal class QuestNameBuilder(IRandomProvider random)
+public class QuestNameBuilder(IRandomProvider random)
 {
     private readonly IRandomProvider _random = random;
 
