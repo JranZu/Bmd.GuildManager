@@ -3,6 +3,7 @@ using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
 using Bmd.GuildManager.Core.Models.Requests;
+using Bmd.GuildManager.Functions.Infrastructure;
 using Bmd.GuildManager.Functions.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -41,6 +42,12 @@ public class CreatePlayerFunction(
         var idempotencyKey = req.Headers.TryGetValue("Idempotency-Key", out var keyValues)
             ? keyValues.ToString()
             : null;
+
+        // Always ensure an idempotency key exists so the re-publish recovery
+        // path works even when the caller doesn't provide one.
+        idempotencyKey = string.IsNullOrWhiteSpace(idempotencyKey)
+            ? Guid.NewGuid().ToString()
+            : idempotencyKey;
 
         if (!string.IsNullOrWhiteSpace(idempotencyKey))
         {

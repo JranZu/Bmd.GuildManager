@@ -1,4 +1,4 @@
-﻿namespace Bmd.GuildManager.Functions.Serialization;
+﻿namespace Bmd.GuildManager.Functions.Infrastructure;
 
 internal static class CosmosConstants
 {

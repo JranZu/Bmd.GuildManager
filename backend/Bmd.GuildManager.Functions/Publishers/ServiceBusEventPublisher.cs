@@ -24,5 +24,9 @@ public class ServiceBusEventPublisher(ServiceBusClient serviceBusClient, string 
 		await _sender.SendMessageAsync(message, cancellationToken);
 	}
 
-	public ValueTask DisposeAsync() => _sender.DisposeAsync();
+	public async ValueTask DisposeAsync()
+	{
+		await _sender.DisposeAsync();
+		GC.SuppressFinalize(this);
+	}
 }

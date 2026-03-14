@@ -5,6 +5,7 @@ using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
 using Bmd.GuildManager.Core.Services;
+using Bmd.GuildManager.Functions.Infrastructure;
 using Bmd.GuildManager.Functions.Serialization;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.DependencyInjection;

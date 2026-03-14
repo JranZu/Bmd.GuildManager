@@ -3,6 +3,7 @@ using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
 using Bmd.GuildManager.Core.Models.Requests;
+using Bmd.GuildManager.Functions.Infrastructure;
 using Bmd.GuildManager.Functions.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

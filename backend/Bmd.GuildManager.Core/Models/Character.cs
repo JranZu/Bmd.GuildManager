@@ -27,13 +27,13 @@ public record Character(
 		CreateWithId(Guid.NewGuid(), playerId, name, level, strength, luck, endurance);
 
 	public static Character CreateWithId(
-	Guid characterId,
-	Guid playerId,
-	string name,
-	int level,
-	int strength,
-	int luck,
-	int endurance)
+		Guid characterId,
+		Guid playerId,
+		string name,
+		int level,
+		int strength,
+		int luck,
+		int endurance)
 	{
 		return new Character(
 			Id:                   characterId.ToString(),

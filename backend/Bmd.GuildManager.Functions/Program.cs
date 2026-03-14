@@ -4,6 +4,7 @@ using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Services;
 using Bmd.GuildManager.Functions.Publishers;
 using Bmd.GuildManager.Functions.Repositories;
+using Bmd.GuildManager.Functions.Infrastructure;
 using Bmd.GuildManager.Functions.Serialization;
 using Bmd.GuildManager.Functions.Services;
 using Microsoft.Azure.Cosmos;

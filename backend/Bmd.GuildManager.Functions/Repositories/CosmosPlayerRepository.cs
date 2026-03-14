@@ -1,6 +1,6 @@
 ﻿using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Models;
-using Bmd.GuildManager.Functions.Serialization;
+using Bmd.GuildManager.Functions.Infrastructure;
 using Microsoft.Azure.Cosmos;
 
 namespace Bmd.GuildManager.Functions.Repositories;

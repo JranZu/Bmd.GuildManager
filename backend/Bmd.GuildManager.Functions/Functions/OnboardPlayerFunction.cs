@@ -2,6 +2,7 @@
 using Bmd.GuildManager.Core.Abstractions;
 using Bmd.GuildManager.Core.Constants;
 using Bmd.GuildManager.Core.Events;
+using Bmd.GuildManager.Functions.Infrastructure;
 using Bmd.GuildManager.Functions.Serialization;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;

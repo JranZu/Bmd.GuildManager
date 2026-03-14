@@ -43,6 +43,7 @@ public class CreatePlayerFunctionTests
         Assert.Single(repository.Players);
         Assert.Single(publisher.Published);
         Assert.Equal("PlayerCreated", publisher.Published[0].EventType);
+        Assert.NotNull(repository.Players[0].IdempotencyKey);
     }
 
     [Fact]

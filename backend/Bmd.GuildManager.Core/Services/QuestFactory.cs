@@ -51,7 +51,7 @@ public class QuestFactory
             EstimatedCompletionAt:  null);
     }
 
-    public static IReadOnlyList<DifficultyTier> AllTiers() => Tiers;
+    public static IReadOnlyList<DifficultyTier> AllTiers() => Array.AsReadOnly(Tiers);
 
     private QuestType PickQuestType() =>
         _random.NextInt(0, 5) switch
