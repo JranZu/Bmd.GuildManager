@@ -41,15 +41,24 @@ public class HandleQuestResolvedFunction(
 
         var data = envelope.Data;
 
-        logger.LogInformation(
-            "HandleQuestResolved processing quest {QuestId}, outcome {Outcome}, " +
-            "xpAwarded {XpAwarded}",
-            data.QuestId, data.Outcome, data.XpAwarded);
+		logger.LogInformation(
+			"HandleQuestResolved processing quest {QuestId}, outcome {Outcome}, " +
+			"xpAwarded {XpAwarded}",
+			data.QuestId, data.Outcome, data.XpAwarded);
 
-        // Characters where survived = false are handled by Phase 10 (HandleCharacterDeathFunction)
-        var survivors = data.Characters.Where(c => c.Survived).ToList();
+		if (data.Characters is null)
+		{
+			logger.LogError(
+				"QuestResolved message for quest {QuestId} has a null Characters list — " +
+				"message will be discarded. Check subscription filter on character-quest-resolved-sub.",
+				data.QuestId);
+			return;
+		}
 
-        foreach (var resolvedChar in survivors)
+		// Characters where survived = false are handled by Phase 10 (HandleCharacterDeathFunction)
+		var survivors = data.Characters.Where(c => c.Survived).ToList();
+
+		foreach (var resolvedChar in survivors)
         {
             await ProcessSurvivorAsync(
                 resolvedChar.CharacterId,

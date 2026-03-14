@@ -161,4 +161,23 @@ public class HandleQuestResolvedFunctionTests
         await function.RunAsync("this is not json", TestContext.Current.CancellationToken);
         // No exception = pass
     }
+
+	[Fact]
+	public async Task RunAsync_NullCharactersList_DoesNotThrow()
+	{
+		// Simulates a message from a wrong event type leaking through
+		// (e.g. QuestStarted deserialized as QuestResolved)
+		var payload = new QuestResolved(
+			Guid.NewGuid(), Guid.NewGuid(), DifficultyTier.Novice,
+			null!, 0, null!, false, 0);
+		var envelope = EventEnvelope<QuestResolved>.Create("test", Guid.NewGuid(), payload);
+		var message = JsonSerializer.Serialize(envelope, FunctionJsonOptions.Default);
+
+		var function = new HandleQuestResolvedFunction(
+			new FakeCharacterRepository(),
+			NullLogger<HandleQuestResolvedFunction>.Instance);
+
+		await function.RunAsync(message, TestContext.Current.CancellationToken);
+		// No exception = pass
+	}
 }
