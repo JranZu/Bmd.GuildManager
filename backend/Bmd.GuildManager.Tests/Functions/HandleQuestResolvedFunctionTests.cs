@@ -152,18 +152,18 @@ public class HandleQuestResolvedFunctionTests
     }
 
     [Fact]
-    public async Task RunAsync_InvalidJson_DoesNotThrow()
+    public async Task RunAsync_InvalidJson_Throws()
     {
         var function = new HandleQuestResolvedFunction(
             new FakeCharacterRepository(),
             NullLogger<HandleQuestResolvedFunction>.Instance);
 
-        await function.RunAsync("this is not json", TestContext.Current.CancellationToken);
-        // No exception = pass
+        await Assert.ThrowsAsync<JsonException>(() =>
+            function.RunAsync("this is not json", TestContext.Current.CancellationToken));
     }
 
 	[Fact]
-	public async Task RunAsync_NullCharactersList_DoesNotThrow()
+	public async Task RunAsync_NullCharactersList_Throws()
 	{
 		// Simulates a message from a wrong event type leaking through
 		// (e.g. QuestStarted deserialized as QuestResolved)
@@ -177,7 +177,7 @@ public class HandleQuestResolvedFunctionTests
 			new FakeCharacterRepository(),
 			NullLogger<HandleQuestResolvedFunction>.Instance);
 
-		await function.RunAsync(message, TestContext.Current.CancellationToken);
-		// No exception = pass
+		await Assert.ThrowsAsync<InvalidOperationException>(() =>
+			function.RunAsync(message, TestContext.Current.CancellationToken));
 	}
 }

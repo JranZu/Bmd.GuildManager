@@ -32,23 +32,21 @@ public class HandleStarterCharactersGrantedFunction(
 		}
 		catch (JsonException ex)
 		{
-			logger.LogWarning(ex,
-				"Received invalid StarterCharactersGranted JSON payload");
-			return;
+			logger.LogError(ex,
+				"Received invalid StarterCharactersGranted JSON — message will be dead-lettered");
+			throw;
 		}
 
 		if (envelope is null)
 		{
-			logger.LogWarning(
-				"Received null or undeserializable StarterCharactersGranted message");
-			return;
+			throw new InvalidOperationException(
+				"StarterCharactersGranted message deserialized to null — message will be dead-lettered");
 		}
 
 		if (envelope.Data.CharacterIds is null)
 		{
-			logger.LogWarning(
-				"Received invalid StarterCharactersGranted message characterIds was null");
-			return;
+			throw new InvalidOperationException(
+				"StarterCharactersGranted message has a null CharacterIds list — message will be dead-lettered");
 		}
 
 		var playerId = envelope.Data.PlayerId;

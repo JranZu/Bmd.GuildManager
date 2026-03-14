@@ -28,14 +28,14 @@ public class HandleCharacterCreatedFunction(
 		}
 		catch (JsonException ex)
 		{
-			logger.LogWarning(ex, "Received invalid CharacterCreated JSON payload");
-			return;
+			logger.LogError(ex, "Received invalid CharacterCreated JSON — message will be dead-lettered");
+			throw;
 		}
 
 		if (envelope is null)
 		{
-			logger.LogWarning("Received null or undeserializable CharacterCreated message");
-			return;
+			throw new InvalidOperationException(
+				"CharacterCreated message deserialized to null — message will be dead-lettered");
 		}
 
 		var data = envelope.Data;

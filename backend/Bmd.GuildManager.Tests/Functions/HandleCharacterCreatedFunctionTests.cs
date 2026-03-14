@@ -58,16 +58,15 @@ public class HandleCharacterCreatedFunctionTests
     }
 
     [Fact]
-    public async Task RunAsync_InvalidJson_DoesNotThrow()
+    public async Task RunAsync_InvalidJson_Throws()
     {
         var repository = new FakeCharacterRepository();
         var function = new HandleCharacterCreatedFunction(
             repository,
             NullLogger<HandleCharacterCreatedFunction>.Instance);
 
-        await function.RunAsync("this is not json", TestContext.Current.CancellationToken);
-
-        Assert.Empty(repository.Characters);
+        await Assert.ThrowsAsync<JsonException>(() =>
+            function.RunAsync("this is not json", TestContext.Current.CancellationToken));
     }
 
     [Fact]

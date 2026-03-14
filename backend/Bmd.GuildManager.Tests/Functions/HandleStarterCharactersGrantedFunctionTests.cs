@@ -108,7 +108,7 @@ public class HandleStarterCharactersGrantedFunctionTests
     }
 
     [Fact]
-    public async Task RunAsync_InvalidJson_DoesNotThrow()
+    public async Task RunAsync_InvalidJson_Throws()
     {
         var publisher = new FakeEventPublisher();
         var function = new HandleStarterCharactersGrantedFunction(
@@ -116,9 +116,8 @@ public class HandleStarterCharactersGrantedFunctionTests
             NullLogger<HandleStarterCharactersGrantedFunction>.Instance,
             new FakeRandomProvider(0.5));
 
-        await function.RunAsync("this is not json", TestContext.Current.CancellationToken);
-
-        Assert.Empty(publisher.Published);
+        await Assert.ThrowsAsync<JsonException>(() =>
+            function.RunAsync("this is not json", TestContext.Current.CancellationToken));
     }
 
     [Fact]

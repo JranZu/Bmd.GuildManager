@@ -28,19 +28,19 @@ public class HandleQuestResolvedFunction(
             envelope = JsonSerializer.Deserialize<EventEnvelope<QuestResolved>>(
                 messageBody, FunctionJsonOptions.Default);
         }
-        catch (JsonException ex)
-        {
-            logger.LogError(ex, "Failed to deserialize QuestResolved message");
-            return;
-        }
+		catch (JsonException ex)
+		{
+			logger.LogError(ex, "Received invalid QuestResolved JSON — message will be dead-lettered");
+			throw;
+		}
 
-        if (envelope is null)
-        {
-            logger.LogError("QuestResolved message deserialized to null");
-            return;
-        }
+		if (envelope is null)
+		{
+			throw new InvalidOperationException(
+				"QuestResolved message deserialized to null — message will be dead-lettered");
+		}
 
-        var data = envelope.Data;
+		var data = envelope.Data;
 
 		logger.LogInformation(
 			"HandleQuestResolved processing quest {QuestId}, outcome {Outcome}, " +
@@ -49,11 +49,8 @@ public class HandleQuestResolvedFunction(
 
 		if (data.Characters is null)
 		{
-			logger.LogError(
-				"QuestResolved message for quest {QuestId} has a null Characters list — " +
-				"message will be discarded. Check subscription filter on character-quest-resolved-sub.",
-				data.QuestId);
-			return;
+			throw new InvalidOperationException(
+				$"QuestResolved for quest {data.QuestId} has a null Characters list — message will be dead-lettered");
 		}
 
 		// Characters where survived = false are handled by Phase 10 (HandleCharacterDeathFunction)

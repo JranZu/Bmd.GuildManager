@@ -50,6 +50,11 @@ public class StartQuestFunction(
                 "playerId, questId, and at least one characterId are required.");
         }
 
+        if (request.CharacterIds.Count != request.CharacterIds.Distinct().Count())
+        {
+            return new BadRequestObjectResult("characterIds must not contain duplicates.");
+        }
+
         logger.LogInformation(
             "StartQuest called by player {PlayerId} for quest {QuestId} " +
             "with {CharacterCount} character(s)",

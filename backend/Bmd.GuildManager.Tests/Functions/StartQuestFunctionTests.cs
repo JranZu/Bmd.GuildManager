@@ -1,4 +1,4 @@
-using Bmd.GuildManager.Core.Events;
+﻿using Bmd.GuildManager.Core.Events;
 using Bmd.GuildManager.Core.Models;
 using Bmd.GuildManager.Functions.Functions;
 using Microsoft.AspNetCore.Http;
@@ -436,6 +436,34 @@ public class StartQuestFunctionTests
         }));
 
         Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task RunAsync_DuplicateCharacterIds_Returns400()
+    {
+        var playerId = Guid.NewGuid();
+        var quest = BuildAvailableQuest(requiredAdventurers: 2);
+        var character = BuildIdleCharacter(playerId);
+        var duplicateId = character.CharacterId;
+
+        var questRepo = new FakeQuestRepository();
+        var characterRepo = new FakeCharacterRepository();
+
+        questRepo.Quests.Add(quest);
+        characterRepo.Characters.Add(character);
+
+        var function = BuildFunction(questRepo, characterRepo,
+            new FakeEventPublisher(), new FakeMessageScheduler());
+
+        var result = await function.RunAsync(BuildRequest(new
+        {
+            playerId = playerId,
+            questId = quest.QuestId,
+            characterIds = new[] { duplicateId, duplicateId }
+        }));
+
+        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal(QuestStatus.Available, questRepo.Quests[0].Status);
     }
 
     [Fact]

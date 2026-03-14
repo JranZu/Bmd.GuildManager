@@ -38,14 +38,14 @@ public class ResolveQuestFunction(
         }
         catch (JsonException ex)
         {
-            logger.LogError(ex, "Failed to deserialize QuestCompleted message");
-            return;
+            logger.LogError(ex, "Received invalid QuestCompleted JSON — message will be dead-lettered");
+            throw;
         }
 
         if (envelope is null)
         {
-            logger.LogError("QuestCompleted message deserialized to null");
-            return;
+            throw new InvalidOperationException(
+                "QuestCompleted message deserialized to null — message will be dead-lettered");
         }
 
         var questId = envelope.Data.QuestId;

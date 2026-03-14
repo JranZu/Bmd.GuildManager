@@ -31,14 +31,14 @@ public class OnboardPlayerFunction(
 		}
 		catch (JsonException ex)
 		{
-			logger.LogWarning(ex, "Received invalid PlayerCreated JSON payload");
-			return;
+			logger.LogError(ex, "Received invalid PlayerCreated JSON — message will be dead-lettered");
+			throw;
 		}
 
 		if (envelope is null)
 		{
-			logger.LogWarning("Received null PlayerCreated message");
-			return;
+			throw new InvalidOperationException(
+				"PlayerCreated message deserialized to null — message will be dead-lettered");
 		}
 
 

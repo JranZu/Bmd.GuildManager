@@ -111,6 +111,17 @@ public class OnboardPlayerFunctionTests
 		Assert.All(publisher.OnboardedAtDuringPublish, snapshot => Assert.Null(snapshot));
 	}
 
+	[Fact]
+	public async Task RunAsync_InvalidJson_Throws()
+	{
+		var repository = new FakePlayerRepository();
+		var publisher = new FakeEventPublisher();
+		var function = new OnboardPlayerFunction(repository, publisher, NullLogger<OnboardPlayerFunction>.Instance);
+
+		await Assert.ThrowsAsync<JsonException>(() =>
+			function.RunAsync("this is not json", TestContext.Current.CancellationToken));
+	}
+
 	/// <summary>
 	/// Fake that records whether OnboardedAt was set at each publish call.
 	/// </summary>

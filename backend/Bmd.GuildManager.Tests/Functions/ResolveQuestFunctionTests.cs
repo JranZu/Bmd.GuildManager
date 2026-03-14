@@ -168,4 +168,16 @@ public class ResolveQuestFunctionTests
 		Assert.Single(resolved.Characters);
 		Assert.Equal(onQuestCharacter.CharacterId, resolved.Characters[0].CharacterId);
 	}
+
+	[Fact]
+	public async Task RunAsync_InvalidJson_Throws()
+	{
+		var questRepo = new FakeQuestRepository();
+		var characterRepo = new FakeCharacterRepository();
+		var publisher = new FakeEventPublisher();
+		var function = BuildFunction(questRepo, characterRepo, publisher);
+
+		await Assert.ThrowsAsync<JsonException>(() =>
+			function.RunAsync("this is not json", TestContext.Current.CancellationToken));
+	}
 }
