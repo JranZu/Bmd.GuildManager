@@ -21,6 +21,8 @@ public class CreatePlayerFunction(
     public async Task<IActionResult> RunAsync(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "players")] HttpRequest req)
     {
+        var ct = req.HttpContext.RequestAborted;
+
         CreatePlayerRequest? request;
         try
         {
@@ -42,7 +44,7 @@ public class CreatePlayerFunction(
 
         if (!string.IsNullOrWhiteSpace(idempotencyKey))
         {
-            var existing = await playerRepository.FindByIdempotencyKeyAsync(idempotencyKey);
+            var existing = await playerRepository.FindByIdempotencyKeyAsync(idempotencyKey, ct);
             if (existing is not null)
             {
                 logger.LogInformation(
@@ -58,7 +60,7 @@ public class CreatePlayerFunction(
         }
 
         var player = Player.Create(request.GuildName, idempotencyKey);
-        await playerRepository.CreateAsync(player);
+        await playerRepository.CreateAsync(player, ct);
 
         logger.LogInformation(
             "Player {PlayerId} created with guild {GuildName}",
@@ -71,7 +73,7 @@ public class CreatePlayerFunction(
             correlationId: player.PlayerId,
             data: eventPayload);
 
-        await eventPublisher.PublishAsync(envelope);
+        await eventPublisher.PublishAsync(envelope, ct);
 
         logger.LogInformation("PlayerCreated event published for {PlayerId}", player.PlayerId);
 

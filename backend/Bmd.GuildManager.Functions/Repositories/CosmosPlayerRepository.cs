@@ -11,12 +11,12 @@ public class CosmosPlayerRepository(CosmosClient cosmosClient) : IPlayerReposito
 
     private Container Container => cosmosClient.GetContainer(DatabaseName, ContainerName);
 
-	public async Task CreateAsync(Player player)
+	public async Task CreateAsync(Player player, CancellationToken cancellationToken = default)
 	{
-		await Container.CreateItemAsync(player, new PartitionKey(player.PlayerId.ToString()));
+		await Container.CreateItemAsync(player, new PartitionKey(player.PlayerId.ToString()), cancellationToken: cancellationToken);
 	}
 
-	public async Task UpdateAsync(Player player, string etag)
+	public async Task UpdateAsync(Player player, string etag, CancellationToken cancellationToken = default)
 	{
 		var options = new ItemRequestOptions
 		{
@@ -27,16 +27,18 @@ public class CosmosPlayerRepository(CosmosClient cosmosClient) : IPlayerReposito
 			player,
 			player.Id,
 			new PartitionKey(player.PlayerId.ToString()),
-			options);
+			options,
+			cancellationToken);
 	}
 
-	public async Task<CosmosDocument<Player>?> FindByPlayerIdAsync(Guid playerId)
+	public async Task<CosmosDocument<Player>?> FindByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default)
 	{
 		try
 		{
 			var response = await Container.ReadItemAsync<Player>(
 				playerId.ToString(),
-				new PartitionKey(playerId.ToString()));
+				new PartitionKey(playerId.ToString()),
+				cancellationToken: cancellationToken);
 			return new CosmosDocument<Player>(response.Resource, response.ETag);
 		}
 		catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -45,7 +47,7 @@ public class CosmosPlayerRepository(CosmosClient cosmosClient) : IPlayerReposito
 		}
 	}
 
-	public async Task<Player?> FindByIdempotencyKeyAsync(string idempotencyKey)
+	public async Task<Player?> FindByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken = default)
 	{
 		var query = new QueryDefinition("SELECT * FROM c WHERE c.idempotencyKey = @key")
 			.WithParameter("@key", idempotencyKey);
@@ -54,7 +56,7 @@ public class CosmosPlayerRepository(CosmosClient cosmosClient) : IPlayerReposito
 
 		while (iterator.HasMoreResults)
 		{
-			var page = await iterator.ReadNextAsync();
+			var page = await iterator.ReadNextAsync(cancellationToken);
 			var existing = page.FirstOrDefault();
 			if (existing is not null)
 			{

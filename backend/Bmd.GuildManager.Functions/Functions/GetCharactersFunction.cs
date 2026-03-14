@@ -17,10 +17,12 @@ public class GetCharactersFunction(
 			Route = "players/{playerId}/characters")] HttpRequest req,
 		Guid playerId)
 	{
+		var ct = req.HttpContext.RequestAborted;
+
 		logger.LogInformation(
 			"GetCharacters called for player {PlayerId}", playerId);
 
-		var characters = await characterRepository.GetByPlayerIdAsync(playerId);
+		var characters = await characterRepository.GetByPlayerIdAsync(playerId, ct);
 
 		logger.LogInformation(
 			"Returning {Count} characters for player {PlayerId}",

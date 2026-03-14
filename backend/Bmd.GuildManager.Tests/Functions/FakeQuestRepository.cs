@@ -7,20 +7,20 @@ public class FakeQuestRepository : IQuestRepository
 {
     public List<Quest> Quests { get; } = [];
 
-    public Task CreateAsync(Quest quest)
+    public Task CreateAsync(Quest quest, CancellationToken cancellationToken = default)
     {
         Quests.Add(quest);
         return Task.CompletedTask;
     }
 
-    public Task<CosmosDocument<Quest>?> FindByQuestIdAsync(Guid questId)
+    public Task<CosmosDocument<Quest>?> FindByQuestIdAsync(Guid questId, CancellationToken cancellationToken = default)
     {
         var match = Quests.FirstOrDefault(q => q.QuestId == questId);
         return Task.FromResult(
             match is null ? null : new CosmosDocument<Quest>(match, "fake-etag"));
     }
 
-    public Task<IReadOnlyList<Quest>> GetAvailableQuestsAsync()
+    public Task<IReadOnlyList<Quest>> GetAvailableQuestsAsync(CancellationToken cancellationToken = default)
     {
         var results = Quests
             .Where(q => q.Status == QuestStatus.Available)
@@ -29,7 +29,7 @@ public class FakeQuestRepository : IQuestRepository
         return Task.FromResult<IReadOnlyList<Quest>>(results);
     }
 
-    public Task<int> CountAvailableByTierAsync(DifficultyTier tier)
+    public Task<int> CountAvailableByTierAsync(DifficultyTier tier, CancellationToken cancellationToken = default)
     {
         var count = Quests.Count(q =>
             q.Status == QuestStatus.Available &&
@@ -37,7 +37,7 @@ public class FakeQuestRepository : IQuestRepository
         return Task.FromResult(count);
     }
 
-    public Task UpdateAsync(Quest quest, string etag)
+    public Task UpdateAsync(Quest quest, string etag, CancellationToken cancellationToken = default)
     {
         var index = Quests.FindIndex(q => q.QuestId == quest.QuestId);
         if (index >= 0)
@@ -45,7 +45,7 @@ public class FakeQuestRepository : IQuestRepository
         return Task.CompletedTask;
     }
 
-    public Task DeleteAsync(Guid questId)
+    public Task DeleteAsync(Guid questId, CancellationToken cancellationToken = default)
     {
         Quests.RemoveAll(q => q.QuestId == questId);
         return Task.CompletedTask;

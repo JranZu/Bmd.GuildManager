@@ -2,5 +2,5 @@
 
 public interface IQuestGeneratorService
 {
-    Task EnsureMinimumQuestsAsync(int minimumPerTier);
+    Task EnsureMinimumQuestsAsync(int minimumPerTier, CancellationToken cancellationToken = default);
 }

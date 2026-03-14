@@ -14,7 +14,8 @@ public class FakeMessageScheduler : IMessageScheduler
     public Task ScheduleMessageAsync(
         string queueOrTopicName,
         string messageBody,
-        DateTimeOffset scheduledEnqueueTime)
+        DateTimeOffset scheduledEnqueueTime,
+        CancellationToken cancellationToken = default)
     {
         Scheduled.Add(new ScheduledMessage(
             queueOrTopicName,

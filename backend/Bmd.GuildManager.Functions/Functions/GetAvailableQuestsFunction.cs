@@ -16,9 +16,11 @@ public class GetAvailableQuestsFunction(
         [HttpTrigger(AuthorizationLevel.Function, "get",
             Route = "quests/available")] HttpRequest req)
     {
+        var ct = req.HttpContext.RequestAborted;
+
         logger.LogInformation("GetAvailableQuests called");
 
-        var quests = await questRepository.GetAvailableQuestsAsync();
+        var quests = await questRepository.GetAvailableQuestsAsync(ct);
 
         var response = quests
             .Select(q => new QuestSummary(

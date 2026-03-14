@@ -20,7 +20,8 @@ public class HandleStarterCharactersGrantedFunction(
 	public async Task RunAsync(
 		[ServiceBusTrigger("player-events", "starter-characters-sub",
 			Connection = "ServiceBusConnectionString")]
-		string message)
+		string message,
+		CancellationToken cancellationToken = default)
 	{
 		EventEnvelope<StarterCharactersGranted>? envelope;
 		try
@@ -86,7 +87,7 @@ public class HandleStarterCharactersGrantedFunction(
 				correlationId: envelope.CorrelationId,
 				data: eventData);
 
-			await eventPublisher.PublishAsync(characterEnvelope);
+			await eventPublisher.PublishAsync(characterEnvelope, cancellationToken);
 
 			logger.LogInformation(
 				"CharacterCreated event published for character {CharacterId} " +

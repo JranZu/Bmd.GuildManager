@@ -11,7 +11,7 @@ public class ServiceBusEventPublisher(ServiceBusClient serviceBusClient, string 
 {
 	private readonly ServiceBusSender _sender = serviceBusClient.CreateSender(topicName);
 
-	public async Task PublishAsync<T>(EventEnvelope<T> envelope)
+	public async Task PublishAsync<T>(EventEnvelope<T> envelope, CancellationToken cancellationToken = default)
 	{
 		var messageBody = JsonSerializer.Serialize(envelope, FunctionJsonOptions.Default);
 		var message = new ServiceBusMessage(messageBody)
@@ -21,7 +21,7 @@ public class ServiceBusEventPublisher(ServiceBusClient serviceBusClient, string 
 			Subject = envelope.EventType
 		};
 
-		await _sender.SendMessageAsync(message);
+		await _sender.SendMessageAsync(message, cancellationToken);
 	}
 
 	public ValueTask DisposeAsync() => _sender.DisposeAsync();

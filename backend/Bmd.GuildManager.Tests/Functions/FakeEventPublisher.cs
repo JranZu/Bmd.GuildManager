@@ -7,7 +7,7 @@ public class FakeEventPublisher : IEventPublisher
 {
 	public List<EventEnvelope<object>> Published { get; } = [];
 
-	public Task PublishAsync<T>(EventEnvelope<T> envelope)
+	public Task PublishAsync<T>(EventEnvelope<T> envelope, CancellationToken cancellationToken = default)
 	{
 		Published.Add(new EventEnvelope<object>(
 			envelope.EventId,

@@ -8,13 +8,13 @@ public class FakeCharacterRepository : ICharacterRepository
     public List<Character> Characters { get; } = [];
     public int UpdateCallCount { get; private set; }
 
-    public Task CreateAsync(Character character)
+    public Task CreateAsync(Character character, CancellationToken cancellationToken = default)
     {
         Characters.Add(character);
         return Task.CompletedTask;
     }
 
-    public Task UpdateAsync(Character character, string etag)
+    public Task UpdateAsync(Character character, string etag, CancellationToken cancellationToken = default)
     {
         UpdateCallCount++;
         var index = Characters.FindIndex(c => c.CharacterId == character.CharacterId);
@@ -23,7 +23,7 @@ public class FakeCharacterRepository : ICharacterRepository
         return Task.CompletedTask;
     }
 
-    public Task<CosmosDocument<Character>?> FindByCharacterIdAsync(Guid characterId, Guid playerId)
+    public Task<CosmosDocument<Character>?> FindByCharacterIdAsync(Guid characterId, Guid playerId, CancellationToken cancellationToken = default)
     {
         var match = Characters.FirstOrDefault(c =>
             c.CharacterId == characterId && c.PlayerId == playerId);
@@ -31,7 +31,7 @@ public class FakeCharacterRepository : ICharacterRepository
             match is null ? null : new CosmosDocument<Character>(match, "fake-etag"));
     }
 
-    public Task<IReadOnlyList<Character>> GetByPlayerIdAsync(Guid playerId)
+    public Task<IReadOnlyList<Character>> GetByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default)
     {
         var results = Characters
             .Where(c => c.PlayerId == playerId)

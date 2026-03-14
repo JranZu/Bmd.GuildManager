@@ -20,7 +20,8 @@ public class OnboardPlayerFunction(
 	[Function("OnboardPlayer")]
 	public async Task RunAsync(
 		[ServiceBusTrigger("player-events", "onboarding-sub", Connection = "ServiceBusConnectionString")]
-		string message)
+		string message,
+		CancellationToken cancellationToken = default)
 	{
 		EventEnvelope<PlayerCreated>? envelope;
 
@@ -50,7 +51,7 @@ public class OnboardPlayerFunction(
 			playerId,
 			guildName);
 
-		var playerDoc = await playerRepository.FindByPlayerIdAsync(playerId);
+		var playerDoc = await playerRepository.FindByPlayerIdAsync(playerId, cancellationToken);
 
 		if (playerDoc is null)
 		{
@@ -70,7 +71,7 @@ public class OnboardPlayerFunction(
 
 		try
 		{
-			await playerRepository.UpdateAsync(updatedPlayer, playerDoc.ETag);
+			await playerRepository.UpdateAsync(updatedPlayer, playerDoc.ETag, cancellationToken);
 		}
 		catch (CosmosException ex)
 			when (ex.StatusCode == System.Net.HttpStatusCode.PreconditionFailed)
@@ -91,7 +92,7 @@ public class OnboardPlayerFunction(
 			correlationId: playerId,
 			data: guildCreated);
 
-		await eventPublisher.PublishAsync(guildCreatedEnvelope);
+		await eventPublisher.PublishAsync(guildCreatedEnvelope, cancellationToken);
 
 		logger.LogInformation("GuildCreated event published for player {PlayerId}", playerId);
 
@@ -104,7 +105,7 @@ public class OnboardPlayerFunction(
 			correlationId: playerId,
 			data: starterCharactersGranted);
 
-		await eventPublisher.PublishAsync(starterCharactersEnvelope);
+		await eventPublisher.PublishAsync(starterCharactersEnvelope, cancellationToken);
 
 		logger.LogInformation("StarterCharactersGranted event published for player {PlayerId}", playerId);
 
@@ -117,7 +118,7 @@ public class OnboardPlayerFunction(
 			correlationId: playerId,
 			data: starterItemsGranted);
 
-		await eventPublisher.PublishAsync(starterItemsEnvelope);
+		await eventPublisher.PublishAsync(starterItemsEnvelope, cancellationToken);
 
 		logger.LogInformation("StarterItemsGranted event published for player {PlayerId}", playerId);
 	}

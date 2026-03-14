@@ -12,20 +12,22 @@ public class CosmosQuestRepository(CosmosClient cosmosClient) : IQuestRepository
     private Container Container =>
         cosmosClient.GetContainer(DatabaseName, ContainerName);
 
-    public async Task CreateAsync(Quest quest)
+    public async Task CreateAsync(Quest quest, CancellationToken cancellationToken = default)
     {
         await Container.CreateItemAsync(
             quest,
-            new PartitionKey(quest.QuestId.ToString()));
+            new PartitionKey(quest.QuestId.ToString()),
+            cancellationToken: cancellationToken);
     }
 
-    public async Task<CosmosDocument<Quest>?> FindByQuestIdAsync(Guid questId)
+    public async Task<CosmosDocument<Quest>?> FindByQuestIdAsync(Guid questId, CancellationToken cancellationToken = default)
     {
         try
         {
             var response = await Container.ReadItemAsync<Quest>(
                 questId.ToString(),
-                new PartitionKey(questId.ToString()));
+                new PartitionKey(questId.ToString()),
+                cancellationToken: cancellationToken);
             return new CosmosDocument<Quest>(response.Resource, response.ETag);
         }
         catch (CosmosException ex)
@@ -35,7 +37,7 @@ public class CosmosQuestRepository(CosmosClient cosmosClient) : IQuestRepository
         }
     }
 
-    public async Task<IReadOnlyList<Quest>> GetAvailableQuestsAsync()
+    public async Task<IReadOnlyList<Quest>> GetAvailableQuestsAsync(CancellationToken cancellationToken = default)
     {
         var query = new QueryDefinition(
             "SELECT * FROM c WHERE c.status = @status")
@@ -46,14 +48,14 @@ public class CosmosQuestRepository(CosmosClient cosmosClient) : IQuestRepository
 
         while (iterator.HasMoreResults)
         {
-            var page = await iterator.ReadNextAsync();
+            var page = await iterator.ReadNextAsync(cancellationToken);
             results.AddRange(page);
         }
 
         return results.AsReadOnly();
     }
 
-    public async Task<int> CountAvailableByTierAsync(DifficultyTier tier)
+    public async Task<int> CountAvailableByTierAsync(DifficultyTier tier, CancellationToken cancellationToken = default)
     {
         var query = new QueryDefinition(
             "SELECT VALUE COUNT(1) FROM c WHERE c.status = @status AND c.tier = @tier")
@@ -61,11 +63,11 @@ public class CosmosQuestRepository(CosmosClient cosmosClient) : IQuestRepository
             .WithParameter("@tier", tier.ToString());
 
         var iterator = Container.GetItemQueryIterator<int>(query);
-        var result = await iterator.ReadNextAsync();
+        var result = await iterator.ReadNextAsync(cancellationToken);
         return result.FirstOrDefault();
     }
 
-    public async Task UpdateAsync(Quest quest, string etag)
+    public async Task UpdateAsync(Quest quest, string etag, CancellationToken cancellationToken = default)
     {
         var options = new ItemRequestOptions
         {
@@ -76,16 +78,18 @@ public class CosmosQuestRepository(CosmosClient cosmosClient) : IQuestRepository
             quest,
             quest.Id,
             new PartitionKey(quest.QuestId.ToString()),
-            options);
+            options,
+            cancellationToken);
     }
 
-    public async Task DeleteAsync(Guid questId)
+    public async Task DeleteAsync(Guid questId, CancellationToken cancellationToken = default)
     {
         try
         {
             await Container.DeleteItemAsync<Quest>(
                 questId.ToString(),
-                new PartitionKey(questId.ToString()));
+                new PartitionKey(questId.ToString()),
+                cancellationToken: cancellationToken);
         }
         catch (CosmosException ex)
             when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)

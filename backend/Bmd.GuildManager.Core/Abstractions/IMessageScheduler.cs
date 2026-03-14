@@ -2,5 +2,5 @@
 
 public interface IMessageScheduler
 {
-    Task ScheduleMessageAsync(string queueOrTopicName, string messageBody, DateTimeOffset scheduledEnqueueTime);
+    Task ScheduleMessageAsync(string queueOrTopicName, string messageBody, DateTimeOffset scheduledEnqueueTime, CancellationToken cancellationToken = default);
 }

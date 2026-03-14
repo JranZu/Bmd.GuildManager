@@ -27,6 +27,8 @@ public class StartQuestFunction(
         [HttpTrigger(AuthorizationLevel.Function, "post",
             Route = "quests")] HttpRequest req)
     {
+        var ct = req.HttpContext.RequestAborted;
+
         // --- 1. Parse and validate request ---
         StartQuestRequest? request;
         try
@@ -55,7 +57,7 @@ public class StartQuestFunction(
             request.PlayerId, request.QuestId, request.CharacterIds.Count);
 
         // --- 2. Load and validate the quest ---
-        var questDoc = await questRepository.FindByQuestIdAsync(request.QuestId);
+        var questDoc = await questRepository.FindByQuestIdAsync(request.QuestId, ct);
 
         if (questDoc is null || questDoc.Document.Status != QuestStatus.Available)
         {
@@ -72,7 +74,7 @@ public class StartQuestFunction(
         foreach (var characterId in request.CharacterIds)
         {
             var charDoc = await characterRepository
-                .FindByCharacterIdAsync(characterId, request.PlayerId);
+                .FindByCharacterIdAsync(characterId, request.PlayerId, ct);
 
             if (charDoc is null)
             {
@@ -121,7 +123,7 @@ public class StartQuestFunction(
 
         try
         {
-            await questRepository.UpdateAsync(claimedQuest, questDoc.ETag);
+            await questRepository.UpdateAsync(claimedQuest, questDoc.ETag, ct);
         }
         catch (CosmosException ex)
             when (ex.StatusCode == System.Net.HttpStatusCode.PreconditionFailed)
@@ -158,7 +160,7 @@ public class StartQuestFunction(
 
             try
             {
-                await characterRepository.UpdateAsync(updated, etag);
+                await characterRepository.UpdateAsync(updated, etag, ct);
             }
             catch (CosmosException ex)
                 when (ex.StatusCode == System.Net.HttpStatusCode.PreconditionFailed)
@@ -193,7 +195,7 @@ public class StartQuestFunction(
             correlationId: correlationId,
             data: questStarted);
 
-        await eventPublisher.PublishAsync(envelope);
+        await eventPublisher.PublishAsync(envelope, ct);
 
         logger.LogInformation(
             "QuestStarted event published for quest {QuestId}", quest.QuestId);
@@ -217,7 +219,8 @@ public class StartQuestFunction(
         await messageScheduler.ScheduleMessageAsync(
             QuestCompletedQueue,
             messageBody,
-            estimatedCompletionAt);
+            estimatedCompletionAt,
+            ct);
 
         logger.LogInformation(
             "QuestCompleted message scheduled for {Time} on queue {Queue}",

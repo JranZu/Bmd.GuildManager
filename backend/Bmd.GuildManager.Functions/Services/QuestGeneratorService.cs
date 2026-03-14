@@ -9,11 +9,11 @@ public class QuestGeneratorService(
     QuestFactory questFactory,
     ILogger<QuestGeneratorService> logger) : IQuestGeneratorService
 {
-    public async Task EnsureMinimumQuestsAsync(int minimumPerTier)
+    public async Task EnsureMinimumQuestsAsync(int minimumPerTier, CancellationToken cancellationToken = default)
     {
         foreach (var tier in QuestFactory.AllTiers())
         {
-            var current = await questRepository.CountAvailableByTierAsync(tier);
+            var current = await questRepository.CountAvailableByTierAsync(tier, cancellationToken);
             var needed = minimumPerTier - current;
 
             if (needed <= 0)
@@ -31,7 +31,7 @@ public class QuestGeneratorService(
             for (var i = 0; i < needed; i++)
             {
                 var quest = questFactory.Generate(tier);
-                await questRepository.CreateAsync(quest);
+                await questRepository.CreateAsync(quest, cancellationToken);
             }
         }
     }

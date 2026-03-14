@@ -25,7 +25,8 @@ public class ResolveQuestFunction(
     [Function("ResolveQuest")]
     public async Task RunAsync(
         [ServiceBusTrigger("quest-completed", Connection = "ServiceBusConnectionString")]
-        string messageBody)
+        string messageBody,
+        CancellationToken cancellationToken = default)
     {
         // --- 1. Deserialize the QuestCompleted envelope ---
         EventEnvelope<QuestCompleted>? envelope;
@@ -53,7 +54,7 @@ public class ResolveQuestFunction(
             "ResolveQuest triggered for quest {QuestId}", questId);
 
         // --- 2. Load quest (idempotency guard) ---
-        var questDoc = await questRepository.FindByQuestIdAsync(questId);
+        var questDoc = await questRepository.FindByQuestIdAsync(questId, cancellationToken);
         if (questDoc is null)
         {
             logger.LogWarning(
@@ -69,7 +70,7 @@ public class ResolveQuestFunction(
         foreach (var characterId in quest.AssignedCharacterIds)
         {
             var charDoc = await characterRepository
-                .FindByCharacterIdAsync(characterId, playerId);
+                .FindByCharacterIdAsync(characterId, playerId, cancellationToken);
             if (charDoc is not null)            
                 characters.Add(charDoc.Document);            
         }
@@ -79,7 +80,7 @@ public class ResolveQuestFunction(
             logger.LogError(
                 "Quest {QuestId} has no resolvable characters. Archiving without resolution.",
                 questId);
-            await ArchiveAndDeleteQuestAsync(quest);
+            await ArchiveAndDeleteQuestAsync(quest, cancellationToken);
             return;
         }
 
@@ -122,7 +123,7 @@ public class ResolveQuestFunction(
             correlationId: envelope.CorrelationId,
             data: questResolved);
 
-        await eventPublisher.PublishAsync(resolvedEnvelope);
+        await eventPublisher.PublishAsync(resolvedEnvelope, cancellationToken);
 
         logger.LogInformation(
             "QuestResolved published for quest {QuestId}: outcome={Outcome}, " +
@@ -132,31 +133,32 @@ public class ResolveQuestFunction(
             xpAwarded, goldAwarded);
 
         // --- 8. Archive quest to Blob Storage and delete from Cosmos ---
-        await ArchiveAndDeleteQuestAsync(quest with { Status = outcome });
+        await ArchiveAndDeleteQuestAsync(quest with { Status = outcome }, cancellationToken);
     }
 
-    private async Task ArchiveAndDeleteQuestAsync(Quest quest)
-    {
-        var containerClient = blobServiceClient.GetBlobContainerClient(ArchiveContainer);
-        await containerClient.CreateIfNotExistsAsync();
+	private async Task ArchiveAndDeleteQuestAsync(Quest quest, CancellationToken cancellationToken)
+	{
+		var containerClient = blobServiceClient.GetBlobContainerClient(ArchiveContainer);
+		await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
 
-        var now = DateTimeOffset.UtcNow;
-        var blobName = $"{now.Year}/{now.Month:D2}/{quest.QuestId}.json";
-        var blobClient = containerClient.GetBlobClient(blobName);
+		var now = DateTimeOffset.UtcNow;
+		var blobName = $"{now.Year}/{now.Month:D2}/{quest.QuestId}.json";
+		var blobClient = containerClient.GetBlobClient(blobName);
 
 		var json = JsonSerializer.Serialize(quest, FunctionJsonOptions.Default);
 		var bytes = Encoding.UTF8.GetBytes(json);
 
-        await blobClient.UploadAsync(
-            new BinaryData(bytes),
-            overwrite: true);
+		await blobClient.UploadAsync(
+			new BinaryData(bytes),
+			overwrite: true,
+			cancellationToken: cancellationToken);
 
-        logger.LogInformation(
-            "Quest {QuestId} archived to blob {BlobName}", quest.QuestId, blobName);
+		logger.LogInformation(
+			"Quest {QuestId} archived to blob {BlobName}", quest.QuestId, blobName);
 
-        await questRepository.DeleteAsync(quest.QuestId);
+		await questRepository.DeleteAsync(quest.QuestId, cancellationToken);
 
-        logger.LogInformation(
-            "Quest {QuestId} deleted from Cosmos DB", quest.QuestId);
-    }
+		logger.LogInformation(
+			"Quest {QuestId} deleted from Cosmos DB", quest.QuestId);
+	}
 }

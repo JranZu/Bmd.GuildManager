@@ -8,7 +8,8 @@ public class ServiceBusMessageScheduler(ServiceBusClient serviceBusClient) : IMe
     public async Task ScheduleMessageAsync(
         string queueOrTopicName,
         string messageBody,
-        DateTimeOffset scheduledEnqueueTime)
+        DateTimeOffset scheduledEnqueueTime,
+        CancellationToken cancellationToken = default)
     {
         var message = new ServiceBusMessage(messageBody)
         {
@@ -17,6 +18,6 @@ public class ServiceBusMessageScheduler(ServiceBusClient serviceBusClient) : IMe
         };
 
         await using var sender = serviceBusClient.CreateSender(queueOrTopicName);
-        await sender.SendMessageAsync(message);
+        await sender.SendMessageAsync(message, cancellationToken);
     }
 }

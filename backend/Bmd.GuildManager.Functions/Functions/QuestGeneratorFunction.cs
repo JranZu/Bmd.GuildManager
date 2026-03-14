@@ -12,13 +12,14 @@ public class QuestGeneratorFunction(
 
     [Function("QuestGenerator")]
     public async Task RunAsync(
-        [TimerTrigger("0 */5 * * * *")] TimerInfo timerInfo)
+        [TimerTrigger("0 */5 * * * *")] TimerInfo timerInfo,
+        CancellationToken cancellationToken = default)
     {
         logger.LogInformation(
             "QuestGenerator triggered at {Time} — ensuring minimum {Min} quests per tier",
             DateTimeOffset.UtcNow, MinimumQuestsPerTier);
 
-        await questGeneratorService.EnsureMinimumQuestsAsync(MinimumQuestsPerTier);
+        await questGeneratorService.EnsureMinimumQuestsAsync(MinimumQuestsPerTier, cancellationToken);
 
         logger.LogInformation("QuestGenerator completed");
     }

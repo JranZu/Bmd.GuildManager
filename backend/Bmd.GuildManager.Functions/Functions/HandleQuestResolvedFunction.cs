@@ -17,7 +17,8 @@ public class HandleQuestResolvedFunction(
     public async Task RunAsync(
         [ServiceBusTrigger("quest-events", "character-quest-resolved-sub",
             Connection = "ServiceBusConnectionString")]
-        string messageBody)
+        string messageBody,
+        CancellationToken cancellationToken = default)
     {
         // --- 1. Deserialize ---
         EventEnvelope<QuestResolved>? envelope;
@@ -54,7 +55,8 @@ public class HandleQuestResolvedFunction(
                 resolvedChar.CharacterId,
                 data.PlayerId,
                 data.XpAwarded,
-                data.QuestId);
+                data.QuestId,
+                cancellationToken);
         }
 
         logger.LogInformation(
@@ -67,10 +69,11 @@ public class HandleQuestResolvedFunction(
         Guid characterId,
         Guid playerId,
         int xpAwarded,
-        Guid questId)
+        Guid questId,
+        CancellationToken cancellationToken)
     {
         var charDoc = await characterRepository
-            .FindByCharacterIdAsync(characterId, playerId);
+            .FindByCharacterIdAsync(characterId, playerId, cancellationToken);
 
         if (charDoc is null)
         {
@@ -110,7 +113,7 @@ public class HandleQuestResolvedFunction(
 
         try
         {
-            await characterRepository.UpdateAsync(updated, etag);
+            await characterRepository.UpdateAsync(updated, etag, cancellationToken);
 
             logger.LogInformation(
                 "Character {CharacterId} updated: xp {OldXp} → {NewXp}, " +

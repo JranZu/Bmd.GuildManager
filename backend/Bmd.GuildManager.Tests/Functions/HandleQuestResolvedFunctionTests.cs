@@ -52,7 +52,7 @@ public class HandleQuestResolvedFunctionTests
         var message = BuildMessage(questId, playerId,
             [new QuestResolvedCharacter(character.CharacterId, Survived: true)]);
 
-        await function.RunAsync(message);
+        await function.RunAsync(message, TestContext.Current.CancellationToken);
 
         var updated = repo.Characters[0];
         Assert.Equal(CharacterStatus.Idle, updated.Status);
@@ -74,7 +74,7 @@ public class HandleQuestResolvedFunctionTests
 
         await function.RunAsync(BuildMessage(questId, playerId,
             [new QuestResolvedCharacter(character.CharacterId, Survived: true)],
-            xpAwarded: 25));
+            xpAwarded: 25), TestContext.Current.CancellationToken);
 
         Assert.Equal(25, repo.Characters[0].Xp);
     }
@@ -95,7 +95,7 @@ public class HandleQuestResolvedFunctionTests
         // 90 + 25 = 115, crosses the 100 threshold ? Level 2
         await function.RunAsync(BuildMessage(questId, playerId,
             [new QuestResolvedCharacter(character.CharacterId, Survived: true)],
-            xpAwarded: 25));
+            xpAwarded: 25), TestContext.Current.CancellationToken);
 
         Assert.Equal(2, repo.Characters[0].Level);
         Assert.Equal(115, repo.Characters[0].Xp);
@@ -116,7 +116,7 @@ public class HandleQuestResolvedFunctionTests
 
         // Character is marked survived=false
         await function.RunAsync(BuildMessage(questId, playerId,
-            [new QuestResolvedCharacter(character.CharacterId, Survived: false)]));
+            [new QuestResolvedCharacter(character.CharacterId, Survived: false)]), TestContext.Current.CancellationToken);
 
         // Character should be completely untouched
         var unchanged = repo.Characters[0];
@@ -149,7 +149,7 @@ public class HandleQuestResolvedFunctionTests
 
         await function.RunAsync(BuildMessage(questId, playerId,
             [new QuestResolvedCharacter(character.CharacterId, Survived: true)],
-            xpAwarded: 25));
+            xpAwarded: 25), TestContext.Current.CancellationToken);
 
         // XP must not be applied a second time
         Assert.Equal(25, repo.Characters[0].Xp);
@@ -162,7 +162,7 @@ public class HandleQuestResolvedFunctionTests
             new FakeCharacterRepository(),
             NullLogger<HandleQuestResolvedFunction>.Instance);
 
-        await function.RunAsync("this is not json");
+        await function.RunAsync("this is not json", TestContext.Current.CancellationToken);
         // No exception = pass
     }
 }

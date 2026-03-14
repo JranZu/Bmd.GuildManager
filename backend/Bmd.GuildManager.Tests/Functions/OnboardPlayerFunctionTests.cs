@@ -33,7 +33,7 @@ public class OnboardPlayerFunctionTests
 		var function = new OnboardPlayerFunction(repository, publisher, NullLogger<OnboardPlayerFunction>.Instance);
 
 		var message = BuildMessage(player.PlayerId, player.GuildName);
-		await function.RunAsync(message);
+		await function.RunAsync(message, TestContext.Current.CancellationToken);
 
 		Assert.Equal(500, repository.Players[0].Gold);
 		Assert.NotNull(repository.Players[0].OnboardedAt);
@@ -62,7 +62,7 @@ public class OnboardPlayerFunctionTests
 		var function = new OnboardPlayerFunction(repository, publisher, NullLogger<OnboardPlayerFunction>.Instance);
 
 		var message = BuildMessage(player.PlayerId, player.GuildName);
-		await function.RunAsync(message);
+		await function.RunAsync(message, TestContext.Current.CancellationToken);
 
 		Assert.Empty(publisher.Published);
 	}
@@ -75,7 +75,7 @@ public class OnboardPlayerFunctionTests
 		var function = new OnboardPlayerFunction(repository, publisher, NullLogger<OnboardPlayerFunction>.Instance);
 
 		var message = BuildMessage(Guid.NewGuid(), "Ghost Guild");
-		await function.RunAsync(message);
+		await function.RunAsync(message, TestContext.Current.CancellationToken);
 
 		Assert.Empty(publisher.Published);
 	}

@@ -12,13 +12,14 @@ public class CosmosCharacterRepository(CosmosClient cosmosClient) : ICharacterRe
 	private Container Container =>
 		cosmosClient.GetContainer(DatabaseName, ContainerName);
 
-	public async Task CreateAsync(Character character)
+	public async Task CreateAsync(Character character, CancellationToken cancellationToken = default)
 	{
 		try
 		{
 			await Container.CreateItemAsync(
 				character,
-				new PartitionKey(character.PlayerId.ToString()));
+				new PartitionKey(character.PlayerId.ToString()),
+				cancellationToken: cancellationToken);
 		}
 		catch (CosmosException ex)
 			when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
@@ -27,13 +28,14 @@ public class CosmosCharacterRepository(CosmosClient cosmosClient) : ICharacterRe
 		}
 	}
 
-	public async Task<CosmosDocument<Character>?> FindByCharacterIdAsync(Guid characterId, Guid playerId)
+	public async Task<CosmosDocument<Character>?> FindByCharacterIdAsync(Guid characterId, Guid playerId, CancellationToken cancellationToken = default)
 	{
 		try
 		{
 			var response = await Container.ReadItemAsync<Character>(
 				characterId.ToString(),
-				new PartitionKey(playerId.ToString()));
+				new PartitionKey(playerId.ToString()),
+				cancellationToken: cancellationToken);
 			return new CosmosDocument<Character>(response.Resource, response.ETag);
 		}
 		catch (CosmosException ex)
@@ -43,7 +45,7 @@ public class CosmosCharacterRepository(CosmosClient cosmosClient) : ICharacterRe
 		}
 	}
 
-	public async Task<IReadOnlyList<Character>> GetByPlayerIdAsync(Guid playerId)
+	public async Task<IReadOnlyList<Character>> GetByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default)
 	{
 		var query = new QueryDefinition(
 			"SELECT * FROM c WHERE c.playerId = @playerId")
@@ -54,14 +56,14 @@ public class CosmosCharacterRepository(CosmosClient cosmosClient) : ICharacterRe
 
 		while (iterator.HasMoreResults)
 		{
-			var page = await iterator.ReadNextAsync();
+			var page = await iterator.ReadNextAsync(cancellationToken);
 			results.AddRange(page);
 		}
 
 		return results.AsReadOnly();
 	}
 
-	public async Task UpdateAsync(Character character, string etag)
+	public async Task UpdateAsync(Character character, string etag, CancellationToken cancellationToken = default)
 	{
 		var options = new ItemRequestOptions
 		{
@@ -72,6 +74,7 @@ public class CosmosCharacterRepository(CosmosClient cosmosClient) : ICharacterRe
 			character,
 			character.Id,
 			new PartitionKey(character.PlayerId.ToString()),
-			options);
+			options,
+			cancellationToken);
 	}
 }
